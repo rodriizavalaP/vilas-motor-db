@@ -1,0 +1,2253 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vilas Motor — Gestión de flota (maqueta)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+/* =====================================================================
+   VILAS MOTOR — Plantilla "Taller" (negro + rojo corporativo)
+   ===================================================================== */
+:root {
+    --negro: #0b0b0c; --negro-2: #161618; --negro-3: #232326;
+    --rojo: #e10600; --rojo-osc: #b80500; --rojo-suave: #fde8e7;
+    --gris-fondo: #efefed; --blanco: #ffffff;
+    --texto: #18181b; --texto-2: #3f3f46; --muted: #71717a;
+    --linea: #dedede; --linea-fuerte: #c7c7c7;
+    --ok: #157f3b; --ok-bg: #e6f5ec;
+    --warn: #a15c00; --warn-bg: #fff3dc; --ambar: #d98a00;
+    --alerta: #c40500; --alerta-bg: #fde8e7;
+    --azul: #1f4fd1;
+    --neutro: #52525b; --neutro-bg: #ececec;
+    --display: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+    --cuerpo: 'Barlow', system-ui, 'Segoe UI', Arial, sans-serif;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { overflow-x: hidden; overflow-x: clip; }
+body { font-family: var(--cuerpo); font-size: 15px; line-height: 1.5; color: var(--texto); background: var(--gris-fondo); min-height: 100vh; display: flex; flex-direction: column; -webkit-font-smoothing: antialiased; }
+svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+button { font-family: inherit; }
+.container { max-width: 1280px; margin: 0 auto; padding: 0 28px; width: 100%; }
+
+/* ===== Barra superior ===== */
+.site-header { background: var(--negro); color: var(--blanco); position: sticky; top: 0; z-index: 900; }
+.header-inner { display: flex; align-items: center; height: 64px; gap: 28px; }
+.brand { display: flex; align-items: center; text-decoration: none; }
+.brand-logo { height: 30px; width: auto; display: block; }
+.main-nav { display: flex; height: 100%; gap: 2px; }
+.main-nav a { display: flex; align-items: center; padding: 0 12px; height: 100%; color: #a1a1aa; text-decoration: none; font-family: var(--display); font-weight: 600; font-size: 16px; letter-spacing: .05em; text-transform: uppercase; position: relative; transition: color .15s, background .15s; white-space: nowrap; }
+.main-nav a:hover { color: var(--blanco); background: var(--negro-2); }
+.main-nav a.activo { color: var(--blanco); }
+.main-nav a.activo::after { content: ''; position: absolute; left: 12px; right: 12px; bottom: 0; height: 4px; background: var(--rojo); transform: skewX(-20deg); }
+.main-nav .contador { margin-left: 6px; background: var(--rojo); color: #fff; font-size: 12px; min-width: 18px; height: 18px; padding: 0 5px; display: inline-flex; align-items: center; justify-content: center; letter-spacing: 0; }
+.header-right { margin-left: auto; display: flex; align-items: center; gap: 14px; }
+.gps-estado { display: flex; align-items: center; gap: 8px; font-family: var(--display); font-weight: 600; letter-spacing: .06em; text-transform: uppercase; font-size: 13px; color: #a1a1aa; white-space: nowrap; }
+.punto-vivo { width: 8px; height: 8px; border-radius: 50%; background: #22c55e; box-shadow: 0 0 0 0 rgba(34,197,94,.6); animation: pulso 1.8s infinite; }
+@keyframes pulso { 0% { box-shadow: 0 0 0 0 rgba(34,197,94,.6); } 70% { box-shadow: 0 0 0 8px rgba(34,197,94,0); } 100% { box-shadow: 0 0 0 0 rgba(34,197,94,0); } }
+.avatar { height: 34px; width: 40px; background: var(--rojo); color: var(--blanco); display: inline-flex; align-items: center; justify-content: center; font-family: var(--display); font-weight: 700; font-size: 17px; clip-path: polygon(18% 0, 100% 0, 82% 100%, 0 100%); }
+.icon-btn { background: none; border: 1px solid var(--negro-3); color: #a1a1aa; width: 36px; height: 36px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; transition: all .15s; }
+.icon-btn:hover { color: var(--blanco); border-color: var(--rojo); background: var(--rojo); }
+.franja { height: 6px; background: linear-gradient(105deg, var(--rojo) 0 72%, transparent 72% 73.5%, var(--rojo) 73.5% 75%, transparent 75% 76.5%, var(--rojo) 76.5% 78%, transparent 78%), var(--negro); }
+
+/* ===== Encabezado de página ===== */
+.page-hero { background: var(--negro); color: var(--blanco); padding: 28px 0 26px; position: relative; overflow: hidden; overflow: clip; }
+.page-hero::before { content: ''; position: absolute; right: -120px; top: -40px; width: 520px; height: 320px; background: repeating-linear-gradient(115deg, transparent 0 22px, rgba(255,255,255,.035) 22px 24px); pointer-events: none; }
+.page-hero.con-kpis { padding-bottom: 0; }
+.hero-top { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; flex-wrap: wrap; position: relative; }
+.eyebrow { display: inline-flex; align-items: center; gap: 8px; font-family: var(--display); font-weight: 600; font-size: 13px; letter-spacing: .16em; text-transform: uppercase; color: var(--rojo); margin-bottom: 4px; }
+.eyebrow::before { content: ''; width: 18px; height: 3px; background: var(--rojo); transform: skewX(-20deg); }
+h1 { font-family: var(--display); font-weight: 700; font-size: 44px; line-height: 1; letter-spacing: .01em; text-transform: uppercase; }
+.page-hero .sub { color: #a1a1aa; margin-top: 8px; }
+.fecha { font-family: var(--display); font-size: 15px; font-weight: 500; letter-spacing: .05em; text-transform: uppercase; color: #a1a1aa; border: 1px solid var(--negro-3); padding: 8px 14px; }
+.fecha b { color: var(--blanco); font-weight: 600; }
+.stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); margin-top: 26px; border-top: 1px solid var(--negro-3); position: relative; }
+.stat-card { padding: 18px 24px 22px; border-left: 1px solid var(--negro-3); display: flex; flex-direction: column; }
+.stat-card:first-child { border-left: none; padding-left: 0; }
+.stat-label { order: 1; font-family: var(--display); font-weight: 600; font-size: 14px; letter-spacing: .1em; text-transform: uppercase; color: #a1a1aa; }
+.stat-number { order: 2; font-family: var(--display); font-weight: 700; font-size: 52px; line-height: 1; margin-top: 6px; color: var(--blanco); font-variant-numeric: tabular-nums; }
+.stat-number small { font-size: 26px; color: #71717a; }
+.stat-extra { order: 3; font-size: 13px; color: #8b8b93; margin-top: 4px; }
+.stat-extra b { color: #4ade80; font-weight: 600; }
+.stat-extra b.rojo { color: #ff6b66; }
+
+/* ===== Contenido ===== */
+main { flex: 1; padding: 32px 0 64px; }
+h2 { font-family: var(--display); font-weight: 700; font-size: 24px; letter-spacing: .03em; text-transform: uppercase; color: var(--negro); display: flex; align-items: center; gap: 12px; }
+h2::before { content: ''; width: 6px; height: 22px; background: var(--rojo); transform: skewX(-15deg); flex-shrink: 0; }
+h3 { font-family: var(--display); font-weight: 700; font-size: 17px; letter-spacing: .06em; text-transform: uppercase; color: var(--negro); margin-bottom: 10px; }
+.seccion-titulo { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 16px; flex-wrap: wrap; }
+.seccion-titulo span.nota { color: var(--muted); font-size: 14px; }
+.vacio { color: var(--muted); text-align: center; padding: 34px 16px; }
+
+.dash-grid { display: grid; grid-template-columns: 1fr 1.25fr; gap: 20px; margin-bottom: 36px; }
+.que-hacer { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.que-hacer-card { --tono: var(--negro); background: var(--blanco); border: 1px solid var(--linea); border-top: 4px solid var(--tono); padding: 16px 18px 18px; text-decoration: none; color: var(--texto); display: flex; flex-direction: column; gap: 2px; position: relative; cursor: pointer; transition: transform .15s, box-shadow .15s; text-align: left; font: inherit; }
+.que-hacer-card:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(0,0,0,.08); }
+.que-hacer-card::after { content: '→'; position: absolute; right: 16px; top: 14px; color: var(--muted); font-size: 18px; transition: transform .15s, color .15s; }
+.que-hacer-card:hover::after { color: var(--tono); transform: translateX(3px); }
+.que-hacer-numero { font-family: var(--display); font-weight: 700; font-size: 46px; line-height: 1; color: var(--tono); }
+.que-hacer-titulo { font-weight: 600; font-size: 15px; margin-top: 8px; }
+.que-hacer-detalle { font-size: 13px; color: var(--muted); line-height: 1.35; }
+.que-hacer-roja { --tono: var(--rojo); } .que-hacer-ambar { --tono: var(--ambar); } .que-hacer-azul { --tono: var(--azul); } .que-hacer-neutra { --tono: var(--negro); }
+
+/* Paneles */
+.panel { background: var(--blanco); border: 1px solid var(--linea); }
+.panel-encabezado { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 20px; border-bottom: 1px solid var(--linea); flex-wrap: wrap; }
+.panel-encabezado p { color: var(--muted); font-size: 14px; margin-top: 2px; }
+.panel-cuerpo { overflow-x: auto; }
+.herramientas { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.filtro { font-family: var(--display); font-weight: 600; font-size: 14px; letter-spacing: .05em; text-transform: uppercase; padding: 6px 12px; border: 1px solid var(--linea-fuerte); background: var(--blanco); color: var(--texto-2); cursor: pointer; }
+.filtro.activo, .filtro:hover { background: var(--negro); color: var(--blanco); border-color: var(--negro); }
+.buscar { height: 34px; border: 1px solid var(--linea-fuerte); border-bottom: 2px solid var(--negro); padding: 0 12px; font: inherit; font-size: 14px; min-width: 220px; }
+.buscar:focus { outline: none; border-color: var(--rojo); }
+
+/* Tablas */
+table { width: 100%; border-collapse: collapse; background: var(--blanco); }
+th { text-align: left; padding: 12px 20px; font-family: var(--display); font-weight: 600; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); background: #fafafa; border-bottom: 2px solid var(--negro); white-space: nowrap; }
+td { padding: 13px 20px; border-bottom: 1px solid var(--linea); color: var(--texto-2); white-space: nowrap; vertical-align: middle; }
+tbody tr.clic { cursor: pointer; transition: background .12s; }
+tbody tr.clic:hover { background: #fafafa; }
+tbody tr.clic:hover td:first-child { box-shadow: inset 4px 0 0 var(--rojo); }
+tbody tr:last-child td { border-bottom: none; }
+.codigo { font-family: var(--display); font-weight: 700; font-size: 17px; letter-spacing: .03em; color: var(--negro); }
+.codigo-ant { display: block; font-size: 12px; color: var(--muted); }
+.horas { font-variant-numeric: tabular-nums; font-weight: 600; color: var(--texto); }
+.horas.negativo { color: var(--alerta); }
+.barra { display: block; width: 110px; height: 5px; background: #ececec; margin-top: 5px; }
+.barra i { display: block; height: 100%; background: var(--ok); }
+.barra.warn i { background: var(--ambar); } .barra.alerta i { background: var(--rojo); }
+.senal { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; }
+.senal::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: #22c55e; }
+.senal.off { color: var(--alerta); } .senal.off::before { background: var(--rojo); }
+.senal.espera::before { background: var(--ambar); }
+
+/* Badges */
+.badge { display: inline-block; font-family: var(--display); font-weight: 700; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; clip-path: polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%); padding: 3px 14px; white-space: nowrap; }
+.badge-alerta { background: var(--rojo); color: var(--blanco); }
+.badge-warn { background: #ffd27a; color: #5c3600; }
+.badge-ok { background: var(--ok-bg); color: var(--ok); }
+.badge-neutral { background: var(--neutro-bg); color: var(--neutro); }
+.badge-azul { background: #e3ebff; color: var(--azul); }
+
+/* Botones */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 38px; padding: 0 18px; font-family: var(--display); font-weight: 700; font-size: 15px; letter-spacing: .08em; text-transform: uppercase; text-decoration: none; border: 2px solid transparent; cursor: pointer; white-space: nowrap; transition: background .15s, color .15s, border-color .15s; }
+.btn-primary { background: var(--rojo); color: var(--blanco); border-color: var(--rojo); }
+.btn-primary:hover { background: var(--rojo-osc); border-color: var(--rojo-osc); }
+.btn-secondary { background: var(--blanco); color: var(--negro); border-color: var(--negro); }
+.btn-secondary:hover { background: var(--negro); color: var(--blanco); }
+.btn-oscuro { background: transparent; color: var(--blanco); border-color: #52525b; }
+.btn-oscuro:hover { border-color: var(--blanco); }
+.btn-chico { height: 32px; padding: 0 12px; font-size: 13px; }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+
+/* Mapa */
+.mapa { width: 100%; height: 100%; min-height: 320px; background: #e8e8e6; position: relative; overflow: hidden; z-index: 1; }
+.mapa-sin-red { display: flex; align-items: center; justify-content: center; text-align: center; color: var(--muted); padding: 24px; height: 100%; font-size: 14px; }
+.panel-mapa { display: flex; flex-direction: column; }
+.panel-mapa .mapa { flex: 1; }
+.mapa-grande { display: grid; grid-template-columns: 320px 1fr; height: 620px; }
+.mapa-lista { border-right: 1px solid var(--linea); overflow-y: auto; }
+.mapa-item { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--linea); cursor: pointer; }
+.mapa-item:hover, .mapa-item.sel { background: #fafafa; box-shadow: inset 4px 0 0 var(--rojo); }
+.mapa-item small { display: block; color: var(--muted); font-size: 12.5px; }
+.pin { width: 12px; height: 12px; transform: rotate(45deg); }
+.marcador { display: flex; align-items: center; gap: 4px; }
+.marcador .rombo { width: 16px; height: 16px; transform: rotate(45deg); border: 2px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,.4); }
+.marcador .etq { background: var(--negro); color: #fff; font-family: var(--display); font-weight: 700; font-size: 12px; letter-spacing: .05em; padding: 1px 6px; white-space: nowrap; }
+.leyenda { display: flex; gap: 14px; flex-wrap: wrap; font-size: 13px; color: var(--texto-2); }
+.leyenda span { display: inline-flex; align-items: center; gap: 6px; }
+
+/* Ficha lateral */
+.fondo-oscuro { position: fixed; inset: 0; background: rgba(11,11,12,.55); z-index: 1000; opacity: 0; pointer-events: none; transition: opacity .2s; }
+.fondo-oscuro.abierto { opacity: 1; pointer-events: auto; }
+.ficha { position: fixed; top: 0; right: 0; bottom: 0; width: min(560px, 100vw); background: var(--blanco); z-index: 1001; transform: translateX(100%); visibility: hidden; transition: transform .25s ease, visibility 0s linear .25s; display: flex; flex-direction: column; box-shadow: -10px 0 40px rgba(0,0,0,.25); }
+.ficha.abierta { transform: translateX(0); visibility: visible; transition: transform .25s ease, visibility 0s; }
+.ficha-cabecera { background: var(--negro); color: var(--blanco); padding: 20px 22px 18px; position: relative; }
+.ficha-cabecera h1 { font-size: 36px; }
+.ficha-cabecera .sub { color: #a1a1aa; margin-top: 4px; }
+.ficha-cerrar { position: absolute; top: 16px; right: 16px; }
+.ficha-cuerpo { overflow-y: auto; padding: 20px 22px 32px; flex: 1; }
+.ficha-mapa { position: relative; overflow: hidden; z-index: 1; height: 200px; margin-bottom: 18px; border: 1px solid var(--linea); }
+.datos { display: grid; grid-template-columns: 1fr 1fr; gap: 0; border: 1px solid var(--linea); margin-bottom: 18px; }
+.datos div { padding: 10px 14px; border-bottom: 1px solid var(--linea); border-right: 1px solid var(--linea); }
+.datos div:nth-child(2n) { border-right: none; }
+.datos dt { font-family: var(--display); font-weight: 600; font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.datos dd { font-weight: 600; color: var(--texto); font-variant-numeric: tabular-nums; }
+.bloque { margin-bottom: 20px; }
+.acciones { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+.acciones select { height: 38px; border: 2px solid var(--negro); padding: 0 10px; font: inherit; font-weight: 600; background: #fff; }
+.lista-simple { list-style: none; border: 1px solid var(--linea); }
+.lista-simple li { display: flex; justify-content: space-between; gap: 12px; padding: 9px 14px; border-bottom: 1px solid var(--linea); font-size: 14px; }
+.lista-simple li:last-child { border-bottom: none; }
+.lista-simple li b { font-variant-numeric: tabular-nums; }
+.proximo { border: 1px solid var(--linea); border-left: 5px solid var(--tono, var(--ok)); padding: 14px 16px; margin-bottom: 18px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.proximo b { font-family: var(--display); font-size: 22px; letter-spacing: .03em; }
+
+/* Modal de creación (uno solo para equipos y tipos) */
+.modal { position: fixed; inset: 0; margin: auto; width: min(620px, calc(100vw - 32px)); height: fit-content; max-height: calc(100vh - 32px); overflow-y: auto; background: var(--blanco); z-index: 1002; display: none; border-top: 5px solid var(--rojo); box-shadow: 0 30px 60px rgba(0,0,0,.35); }
+.modal.abierto { display: block; }
+.modal-cabecera { padding: 20px 24px 6px; display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.modal-cabecera .icon-btn { color: var(--muted); border-color: var(--linea); }
+.modal-cuerpo { padding: 10px 24px 24px; }
+.form-fila { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.campo { margin-bottom: 14px; }
+.campo label { display: block; font-family: var(--display); font-weight: 600; font-size: 14px; letter-spacing: .08em; text-transform: uppercase; color: var(--texto-2); margin-bottom: 6px; }
+.campo input, .campo select { width: 100%; height: 42px; padding: 0 14px; font: inherit; font-size: 15px; border: 1px solid var(--linea-fuerte); border-bottom: 2px solid var(--negro); background: var(--blanco); color: var(--texto); }
+.campo input:focus, .campo select:focus { outline: none; border-color: var(--rojo); }
+.campo .ayuda { display: block; font-size: 12.5px; color: var(--muted); margin-top: 4px; }
+.campo.error input, .campo.error select { border-color: var(--rojo); }
+.campo .msg-error { color: var(--alerta); font-size: 12.5px; margin-top: 4px; display: none; }
+.campo.error .msg-error { display: block; }
+.auto { background: var(--negro); color: var(--blanco); padding: 14px 16px; margin: 4px 0 18px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.auto dt { font-family: var(--display); font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--rojo); font-weight: 600; }
+.auto dd { font-family: var(--display); font-weight: 700; font-size: 20px; letter-spacing: .03em; word-break: break-word; }
+.auto dd.normal { font-family: var(--cuerpo); font-size: 14px; font-weight: 600; letter-spacing: 0; }
+.chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.chip { border: 1px solid var(--linea-fuerte); padding: 6px 12px; font-family: var(--display); font-weight: 600; font-size: 14px; letter-spacing: .05em; cursor: pointer; background: #fff; user-select: none; }
+.chip.on { background: var(--negro); color: #fff; border-color: var(--negro); }
+.modal-pie { display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid var(--linea); padding-top: 16px; margin-top: 6px; }
+
+/* Tipos */
+.tipos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 16px; }
+.tipo-card { background: #fff; border: 1px solid var(--linea); border-top: 4px solid var(--negro); padding: 18px; }
+.tipo-card header { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 12px; }
+.prefijo { font-family: var(--display); font-weight: 700; font-size: 28px; line-height: 1; background: var(--negro); color: #fff; padding: 6px 10px; clip-path: polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%); }
+.tipo-card h3 { margin: 0; font-size: 20px; }
+.tipo-card .meta { color: var(--muted); font-size: 13px; }
+.tipo-card details { margin-top: 12px; border-top: 1px solid var(--linea); padding-top: 10px; }
+.tipo-card summary { cursor: pointer; font-family: var(--display); font-weight: 600; letter-spacing: .06em; text-transform: uppercase; font-size: 14px; }
+.tipo-card .lista-simple { margin-top: 8px; }
+
+/* Arriendos */
+.cliente-bloque { margin-bottom: 16px; }
+
+/* Toast */
+.toast { position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 20px); background: var(--negro); color: #fff; padding: 12px 18px; border-left: 4px solid var(--rojo); z-index: 1100; opacity: 0; transition: all .25s; font-size: 14px; pointer-events: none; max-width: calc(100vw - 32px); }
+.toast.visible { opacity: 1; transform: translate(-50%, 0); }
+
+/* Login */
+.login-wrap { min-height: 100vh; display: grid; grid-template-columns: 1.1fr 1fr; }
+.login-lado { background: var(--negro); color: var(--blanco); padding: 48px; display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden; }
+.login-lado::before { content: ''; position: absolute; inset: 0; background: repeating-linear-gradient(115deg, transparent 0 34px, rgba(255,255,255,.03) 34px 36px); }
+.login-lado::after { content: ''; position: absolute; right: -60px; bottom: 80px; width: 380px; height: 10px; background: var(--rojo); transform: skewX(-30deg); box-shadow: -40px 24px 0 0 var(--rojo), -80px 48px 0 0 var(--rojo); }
+.login-lado > * { position: relative; }
+.login-lado .brand-logo { height: 40px; align-self: flex-start; }
+.login-lado h1 { font-size: 56px; max-width: 460px; }
+.login-lado h1 em { color: var(--rojo); font-style: normal; }
+.login-lado p { color: #a1a1aa; max-width: 420px; margin-top: 14px; }
+.login-pie { font-size: 13px; color: #71717a; }
+.login-form { display: flex; align-items: center; justify-content: center; padding: 40px 24px; background: var(--blanco); }
+.auth-box { width: 100%; max-width: 380px; }
+.auth-box .sub { color: var(--muted); margin: 6px 0 22px; }
+.auth-box .btn { width: 100%; height: 46px; margin-top: 6px; }
+
+/* Verificación en dos pasos */
+.pasos { display: flex; gap: 6px; margin-bottom: 18px; }
+.pasos span { flex: 1; height: 4px; background: var(--linea); transform: skewX(-20deg); }
+.pasos span.on { background: var(--rojo); }
+.paso-txt { font-family: var(--display); font-weight: 600; font-size: 13px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; display: block; }
+.codigo-2fa { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin: 6px 0 10px; }
+.codigo-2fa input { height: 54px; text-align: center; font-family: var(--display); font-weight: 700; font-size: 28px; border: 1px solid var(--linea-fuerte); border-bottom: 3px solid var(--negro); width: 100%; min-width: 0; padding: 0; }
+.codigo-2fa input:focus { outline: none; border-color: var(--rojo); }
+.codigo-2fa.error input { border-color: var(--rojo); animation: temblor .3s; }
+@keyframes temblor { 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+.msg-2fa { min-height: 20px; font-size: 13.5px; color: var(--alerta); }
+.fila-2fa { display: flex; justify-content: space-between; align-items: center; gap: 10px; font-size: 13.5px; color: var(--muted); margin: 8px 0 14px; flex-wrap: wrap; }
+.link-btn { background: none; border: none; color: var(--rojo); font: inherit; font-weight: 600; cursor: pointer; padding: 0; }
+.link-btn:disabled { color: var(--muted); cursor: default; font-weight: 400; }
+.recordar { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--texto-2); margin-bottom: 6px; cursor: pointer; }
+.recordar input { accent-color: var(--rojo); width: 16px; height: 16px; }
+.demo-codigo { margin-top: 18px; border: 1px dashed var(--linea-fuerte); padding: 10px 14px; font-size: 13px; color: var(--muted); }
+.demo-codigo b { font-family: var(--display); font-size: 18px; letter-spacing: .2em; color: var(--negro); }
+.error-login { background: var(--alerta-bg); color: var(--alerta); padding: 10px 14px; font-size: 14px; margin-bottom: 14px; display: none; }
+.error-login.visible { display: block; }
+.oculto { display: none !important; }
+
+/* Barra de arriendos */
+.barra-acciones { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; background: var(--blanco); border: 1px solid var(--linea); border-left: 5px solid var(--rojo); padding: 14px 18px; margin-bottom: 22px; }
+.barra-acciones .info { font-size: 14px; color: var(--texto-2); }
+.barra-acciones .info b { font-family: var(--display); font-size: 20px; color: var(--negro); }
+.disponibles { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+.disponibles button { border: 1px solid var(--linea-fuerte); background: #fff; padding: 4px 10px; font-family: var(--display); font-weight: 700; letter-spacing: .04em; cursor: pointer; font-size: 14px; }
+.disponibles button:hover { border-color: var(--negro); background: var(--negro); color: #fff; }
+
+/* Barra de filtros del dashboard */
+.filtros-dash { background: var(--blanco); border: 1px solid var(--linea); border-top: 4px solid var(--negro); padding: 16px 18px 14px; margin-bottom: 26px; }
+.filtros-fila { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)) minmax(0, 1.3fr); gap: 12px; align-items: end; }
+.filtro-campo label { display: block; font-family: var(--display); font-weight: 600; font-size: 12.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+.filtro-campo select, .filtro-campo input { width: 100%; height: 38px; border: 1px solid var(--linea-fuerte); border-bottom: 2px solid var(--negro); padding: 0 10px; font: inherit; font-size: 14px; background: #fff; color: var(--texto); min-width: 0; }
+.filtro-campo select:focus, .filtro-campo input:focus { outline: none; border-color: var(--rojo); }
+.filtro-campo.activo select { border-color: var(--rojo); border-bottom-color: var(--rojo); font-weight: 600; }
+.filtros-pie { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 12px; flex-wrap: wrap; font-size: 14px; color: var(--texto-2); }
+.filtros-pie b { font-family: var(--display); font-size: 18px; color: var(--negro); }
+.chips-activos { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.chip-activo { display: inline-flex; align-items: center; gap: 6px; background: var(--negro); color: #fff; padding: 3px 6px 3px 10px; font-size: 13px; border: 0; cursor: pointer; font-family: inherit; }
+.chip-activo span { color: var(--rojo); font-weight: 700; }
+.chip-activo:hover { background: var(--rojo); } .chip-activo:hover span { color: #fff; }
+@media (max-width: 1100px) { .filtros-fila { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 600px) { .filtros-fila { grid-template-columns: 1fr 1fr; } .filtros-fila .filtro-campo:last-child { grid-column: 1 / -1; } }
+
+/* Footer */
+.site-footer { background: var(--negro); color: #71717a; font-size: 13px; padding: 18px 0; }
+.site-footer .container { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; align-items: center; }
+.site-footer button { background: none; border: 1px solid var(--negro-3); color: #a1a1aa; padding: 4px 10px; cursor: pointer; font-size: 12.5px; }
+.site-footer button:hover { color: #fff; border-color: var(--rojo); }
+
+.vista { display: none; } .vista.visible { display: block; }
+.solo-login .site-header, .solo-login .franja, .solo-login .site-footer { display: none; }
+
+/* ===== Responsive ===== */
+@media (max-width: 1280px) { .gps-estado span.txt { display: none; } }
+@media (max-width: 1100px) {
+    .dash-grid { grid-template-columns: 1fr; }
+    .panel-mapa { height: auto; }
+    .panel-mapa .mapa { flex: none; height: 300px; min-height: 0; }
+    .mapa-grande { grid-template-columns: 1fr; height: auto; }
+    .mapa-grande .mapa { height: 420px; }
+    .mapa-lista { border-right: none; border-top: 1px solid var(--linea); max-height: 360px; order: 2; }
+}
+@media (max-width: 900px) {
+    .container { padding: 0 16px; }
+    .header-inner { gap: 12px; }
+    .main-nav { position: fixed; left: 0; right: 0; top: 64px; height: 46px; background: var(--negro-2); overflow-x: auto; padding: 0 6px; }
+    .main-nav a { font-size: 14px; padding: 0 10px; }
+    .site-header { padding-bottom: 46px; }
+    h1 { font-size: 34px; }
+    .stat-grid { grid-template-columns: repeat(2, 1fr); }
+    .stat-card { padding: 14px 14px 16px; border-top: 1px solid var(--negro-3); }
+    .stat-card:nth-child(odd) { border-left: none; padding-left: 0; }
+    .stat-card:nth-child(-n+2) { border-top: none; }
+    .stat-number { font-size: 38px; }
+    .login-wrap { grid-template-columns: 1fr; }
+    .login-lado { padding: 32px 24px; min-height: 280px; }
+    .login-lado h1 { font-size: 38px; }
+    .login-lado::after, .login-lado p, .login-pie { display: none; }
+    .login-lado { min-height: 0; gap: 22px; }
+    .fecha { display: none; }
+    .buscar { min-width: 0; width: 100%; }
+    .form-fila { grid-template-columns: 1fr; gap: 0; }
+    .auto { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 520px) {
+    .que-hacer { grid-template-columns: 1fr 1fr; gap: 10px; }
+    .que-hacer-card { padding: 12px 14px 14px; }
+    .que-hacer-numero { font-size: 36px; }
+    .que-hacer-card::after { display: none; }
+    td, th { padding-left: 14px; padding-right: 14px; }
+    .datos { grid-template-columns: 1fr; }
+    .datos div { border-right: none; }
+}
+
+/* ===================== v4: navegación clickeable y filtros compartidos ===================== */
+.stat-card.clic { cursor: pointer; position: relative; transition: background .15s; }
+.stat-card.clic:hover, .stat-card.clic:focus-visible { background: var(--negro-2); outline: none; }
+.stat-card.clic::after { content: 'Ver lista →'; position: absolute; top: 18px; right: 20px; font-family: var(--display); font-weight: 600; font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--rojo); opacity: 0; transition: opacity .15s; }
+.stat-card.clic:hover::after, .stat-card.clic:focus-visible::after { opacity: 1; }
+.stat-link { background: none; border: 0; color: inherit; font: inherit; cursor: pointer; padding: 0; text-decoration: underline dotted; text-underline-offset: 3px; }
+.stat-link:hover { color: #fff; }
+
+.barra-filtros { background: var(--blanco); border: 1px solid var(--linea); border-top: 4px solid var(--negro); padding: 16px 18px 14px; margin-bottom: 24px; }
+.barra-filtros .filtros-fila { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.barra-filtros .filtro-campo.ancho { grid-column: span 1; }
+.fd-resumen b { font-family: var(--display); font-size: 18px; color: var(--negro); }
+
+.id-equipo { font-family: var(--display); font-weight: 600; font-size: 15px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.nuevo { display: inline-block; background: var(--rojo); color: #fff; font-family: var(--display); font-weight: 700; font-size: 11px; letter-spacing: .1em; padding: 1px 6px; margin-left: 6px; vertical-align: 2px; }
+tr.recien td { animation: destello 2.4s ease; }
+@keyframes destello { 0%, 40% { background: #fff1d6; } 100% { background: transparent; } }
+
+.ubic-btn { display: inline-flex; align-items: center; gap: 6px; background: none; border: 0; font: inherit; color: var(--texto-2); cursor: pointer; text-align: left; padding: 0; }
+.ubic-btn svg { width: 15px; height: 15px; color: var(--rojo); }
+.ubic-btn:hover { color: var(--rojo); text-decoration: underline; }
+
+.contador { font-family: var(--display); font-weight: 600; font-size: 15px; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); }
+.contador b { color: var(--negro); font-size: 18px; }
+
+.tipo-card .ver-equipos { display: inline-block; margin-top: 12px; }
+
+.migas { display: flex; gap: 8px; align-items: center; font-family: var(--display); font-weight: 600; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: #8b8b93; margin-bottom: 6px; }
+.migas a { color: #8b8b93; text-decoration: none; }
+.migas a:hover { color: #fff; }
+.migas span.sep { color: var(--rojo); }
+
+.toggle-filtros { display: none; }
+@media (max-width: 900px) {
+    .barra-filtros .filtros-fila { grid-template-columns: 1fr 1fr; }
+    .barra-filtros:not(.abierta) .filtros-fila { display: none; }
+    .barra-filtros .filtros-pie { margin-top: 0; }
+    .barra-filtros.abierta .filtros-pie { margin-top: 12px; }
+    .toggle-filtros { display: inline-flex; }
+    .stat-card.clic::after { display: none; }
+}
+
+/* ===================== v5: usuarios, auditoría y accesibilidad ===================== */
+:focus-visible { outline: 3px solid var(--rojo); outline-offset: 2px; }
+.btn:focus-visible, .filtro:focus-visible, .chip:focus-visible { outline-offset: 3px; }
+tr.clic:focus-visible { outline-offset: -3px; }
+.saltar { position: absolute; left: -9999px; top: 8px; z-index: 3000; background: #fff; color: var(--negro); padding: 10px 16px; font-weight: 600; border: 3px solid var(--rojo); text-decoration: none; }
+.saltar:focus { left: 12px; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
+
+.usuario-nombre { display: flex; flex-direction: column; line-height: 1.2; font-size: 13px; color: #fff; text-align: right; }
+.usuario-nombre small { color: #a1a1aa; font-size: 12px; }
+@media (max-width: 1700px) { .usuario-nombre { display: none; } }\n.header-inner { gap: 20px; }\n.main-nav a { padding: 0 11px; }
+.icon-btn.ayuda { font-family: var(--display); font-weight: 700; font-size: 18px; }
+
+.tabs { display: flex; gap: 4px; border-bottom: 2px solid var(--negro); margin-bottom: 22px; flex-wrap: wrap; }
+.tabs button { background: none; border: 0; padding: 12px 18px; font-family: var(--display); font-weight: 700; font-size: 17px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); cursor: pointer; position: relative; }
+.tabs button[aria-selected="true"] { color: var(--negro); }
+.tabs button[aria-selected="true"]::after { content: ''; position: absolute; left: 12px; right: 12px; bottom: -2px; height: 5px; background: var(--rojo); transform: skewX(-20deg); }
+.tabs button:hover { color: var(--negro); }
+.tabs .cuenta { display: inline-block; min-width: 22px; margin-left: 6px; padding: 0 6px; background: var(--neutro-bg); color: var(--texto-2); font-size: 13px; }
+
+.roles-ayuda { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 18px; }
+.rol-card { background: #fff; border: 1px solid var(--linea); padding: 14px 16px; font-size: 14px; color: var(--texto-2); }
+.rol-card b { display: block; font-family: var(--display); font-size: 17px; letter-spacing: .04em; text-transform: uppercase; color: var(--negro); margin-bottom: 4px; }
+@media (max-width: 900px) { .roles-ayuda { grid-template-columns: 1fr; } }
+
+.reglas { list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: 4px 12px; margin-top: 8px; font-size: 13px; color: var(--muted); }
+.reglas li::before { content: '○ '; }
+.reglas li.ok { color: var(--ok); }
+.reglas li.ok::before { content: '✓ '; font-weight: 700; }
+.clave-box { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.clave-box code { font-family: ui-monospace, Consolas, monospace; font-size: 20px; letter-spacing: .08em; background: var(--negro); color: #fff; padding: 8px 14px; }
+.credencial { border: 1px solid var(--linea); border-left: 5px solid var(--ok); padding: 16px; margin-bottom: 14px; }
+.credencial dt { font-family: var(--display); font-weight: 600; font-size: 12.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-top: 10px; }
+.credencial dt:first-child { margin-top: 0; }
+.credencial dd { font-size: 16px; font-weight: 600; }
+.check { display: flex; align-items: flex-start; gap: 10px; font-size: 14px; color: var(--texto-2); margin: 6px 0 14px; cursor: pointer; }
+.check input { accent-color: var(--rojo); width: 18px; height: 18px; margin-top: 2px; }
+.check small { display: block; color: var(--muted); }
+
+.aud-detalle { white-space: normal; min-width: 260px; max-width: 460px; }
+.aud-usuario { display: block; font-weight: 600; color: var(--texto); }
+.aud-fecha { font-variant-numeric: tabular-nums; }
+.cambios li span small { color: var(--muted); display: block; font-size: 12.5px; }
+
+.guia { counter-reset: paso; list-style: none; }
+.guia li { position: relative; padding: 0 0 14px 44px; font-size: 15px; color: var(--texto-2); }
+.guia li::before { counter-increment: paso; content: counter(paso); position: absolute; left: 0; top: -2px; width: 30px; height: 30px; background: var(--negro); color: #fff; font-family: var(--display); font-weight: 700; display: flex; align-items: center; justify-content: center; }
+.guia li b { color: var(--negro); }
+.teclas { display: flex; gap: 14px; flex-wrap: wrap; font-size: 13.5px; color: var(--texto-2); border-top: 1px solid var(--linea); padding-top: 12px; }
+kbd { font-family: ui-monospace, Consolas, monospace; font-size: 12px; border: 1px solid var(--linea-fuerte); border-bottom-width: 2px; padding: 1px 6px; background: #fafafa; }
+
+/* Los SVG internos del mapa (Leaflet) conservan su tamaño y colores */
+.leaflet-container svg { width: auto; height: auto; fill: initial; stroke: initial; stroke-width: initial; }
+.leaflet-container .leaflet-marker-icon { cursor: pointer; }
+.leaflet-container a.leaflet-control-zoom-in, .leaflet-container a.leaflet-control-zoom-out { font-family: var(--cuerpo); }
+
+/* Permisos por rol: el técnico no ve lo que no puede hacer */
+.rol-TECNICO [data-crear], .rol-TECNICO [data-arrendar], .rol-TECNICO [data-terminar-arriendo],
+.rol-TECNICO select[data-cambiar-estado], .rol-TECNICO [data-reconectar] { display: none !important; }
+</style>
+</head>
+<body>
+<a href="#" class="saltar" id="saltar">Saltar al contenido</a>
+
+<!-- ===================== LOGIN (dos pasos) ===================== -->
+<section class="vista" id="vista-login">
+    <div class="login-wrap">
+        <div class="login-lado">
+            <img src="data:image/png;base64,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" alt="Vilas Motor" class="brand-logo">
+            <div>
+                <span class="eyebrow">Sistema de gestión</span>
+                <h1>Mantenimiento de flota <em>sin atrasos</em></h1>
+                <p>Ubicación en vivo, horómetros por telemetría, planes de mantención, arriendos y órdenes de trabajo en un solo lugar.</p>
+            </div>
+            <span class="login-pie">Vilas Motor · desde 1989</span>
+        </div>
+        <div class="login-form">
+            <div class="auth-box">
+                <div class="pasos"><span class="on" id="barra-paso-1"></span><span id="barra-paso-2"></span></div>
+                <div id="paso-1">
+                    <span class="paso-txt">Paso 1 de 2</span>
+                    <h2>Iniciar sesión</h2>
+                    <p class="sub">Ingresa con tu cuenta de planificador.</p>
+                    <div class="error-login" id="error-login"></div>
+                    <form id="form-login" novalidate>
+                        <div class="campo"><label for="email">Email</label><input id="email" type="email" autocomplete="username" placeholder="nombre@vilasmotor.cl"></div>
+                        <div class="campo"><label for="pass">Contraseña</label><input id="pass" type="password" autocomplete="current-password" placeholder="••••••••••••"></div>
+                        <button type="submit" class="btn btn-primary">Continuar</button>
+                    </form>
+                </div>
+                <div id="paso-2" class="oculto">
+                    <span class="paso-txt">Paso 2 de 2</span>
+                    <h2>Verificación</h2>
+                    <p class="sub">Enviamos un código de 6 dígitos a <b id="destino-2fa"></b>.</p>
+                    <form id="form-2fa" novalidate>
+                        <div class="codigo-2fa" id="codigo-2fa">
+                            <input inputmode="numeric" aria-label="Dígito 1" autocomplete="one-time-code">
+                            <input inputmode="numeric" aria-label="Dígito 2">
+                            <input inputmode="numeric" aria-label="Dígito 3">
+                            <input inputmode="numeric" aria-label="Dígito 4">
+                            <input inputmode="numeric" aria-label="Dígito 5">
+                            <input inputmode="numeric" aria-label="Dígito 6">
+                        </div>
+                        <div class="msg-2fa" id="msg-2fa" role="alert"></div>
+                        <div class="fila-2fa"><span id="vence-2fa"></span><button type="button" class="link-btn" id="reenviar-2fa">Reenviar código</button></div>
+                        <label class="recordar"><input type="checkbox" id="recordar-2fa"> Confiar en este dispositivo por 30 días</label>
+                        <button type="submit" class="btn btn-primary">Verificar y entrar</button>
+                    </form>
+                    <div class="fila-2fa"><button type="button" class="link-btn" id="volver-2fa">← Usar otra cuenta</button></div>
+                    <div class="demo-codigo">Modo demostración: no hay correo real, tu código es <b id="demo-codigo"></b></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ===================== CABECERA ===================== -->
+<header class="site-header">
+    <div class="container header-inner">
+        <a class="brand" href="#" data-ir="dashboard"><img src="data:image/png;base64,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" alt="Vilas Motor" class="brand-logo"></a>
+        <nav class="main-nav" id="nav">
+            <a href="#" data-ir="dashboard">Dashboard</a>
+            <a href="#" data-ir="flota">Flota</a>
+            <a href="#" data-ir="arriendos">Arriendos</a>
+            <a href="#" data-ir="ordenes" title="Órdenes de trabajo">Órdenes</a>
+            <a href="#" data-ir="tipos" title="Tipos de equipo y pautas de mantención">Pautas</a>
+            <a href="#" data-ir="admin" title="Usuarios e historial de auditoría">Administración</a>
+        </nav>
+        <div class="header-right">
+            <div class="gps-estado" title="Equipos que están reportando por GPS"><span class="punto-vivo"></span><span class="txt">GPS</span> <span id="gps-resumen"></span></div>
+            <button class="icon-btn ayuda" type="button" data-ayuda title="Ayuda: cómo usar el sistema" aria-label="Ayuda">?</button>
+            <span class="usuario-nombre" id="usuario-nombre"></span>
+            <span class="avatar" id="avatar" aria-hidden="true">P</span>
+            <button class="icon-btn" title="Cerrar sesión" data-ir="login"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></svg></button>
+        </div>
+    </div>
+</header>
+<div class="franja"></div>
+
+<!-- ===================== DASHBOARD ===================== -->
+<section class="vista" id="vista-dashboard">
+    <div class="page-hero con-kpis">
+        <div class="container">
+            <div class="hero-top">
+                <div>
+                    <span class="eyebrow">Panel del planificador</span>
+                    <h1>Dashboard</h1>
+                    <p class="sub">Toca cualquier número para ver la lista completa que lo forma.</p>
+                </div>
+                <div class="fecha">Hoy · <b id="fecha"></b></div>
+            </div>
+            <div class="stat-grid" id="kpis"></div>
+        </div>
+    </div>
+    <main>
+        <div class="container">
+            <div class="barra-filtros" data-vista="dashboard"></div>
+            <div class="dash-grid">
+                <div>
+                    <div class="seccion-titulo"><h2>Qué hacer</h2></div>
+                    <div class="que-hacer" id="que-hacer"></div>
+                </div>
+                <div class="panel panel-mapa">
+                    <div class="panel-encabezado">
+                        <div><h2>Flota en vivo</h2><p>Toca una máquina del mapa para abrir su ficha.</p></div>
+                        <div class="herramientas"><button class="btn btn-secondary btn-chico" data-encuadrar="dash">Ver toda la flota</button><button class="btn btn-secondary btn-chico" data-ir="flota" data-modo="mapa">Mapa completo</button></div>
+                    </div>
+                    <div class="mapa" id="mapa-dash"></div>
+                </div>
+            </div>
+            <section class="panel">
+                <div class="panel-encabezado">
+                    <div><h2>Próximo mantenimiento</h2><p>Ordenado del más urgente al menos urgente. Toca una fila para ver la ficha.</p></div>
+                    <div class="herramientas" id="chips-mant">
+                        <button class="filtro" data-mant="">Todos</button>
+                        <button class="filtro" data-mant="VENCIDO">Vencidos</button>
+                        <button class="filtro" data-mant="POR_VENCER">Por vencer</button>
+                        <button class="filtro" data-mant="AL_DIA">Al día</button>
+                    </div>
+                </div>
+                <div class="panel-cuerpo">
+                    <table>
+                        <thead><tr><th>ID</th><th>Equipo</th><th>Tipo</th><th>Próximo servicio</th><th>Restante</th><th>Mantención</th></tr></thead>
+                        <tbody id="tabla-pronostico"></tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+    </main>
+</section>
+
+<!-- ===================== FLOTA ===================== -->
+<section class="vista" id="vista-flota">
+    <div class="page-hero">
+        <div class="container hero-top">
+            <div>
+                <div class="migas"><a href="#" data-ir="dashboard">Dashboard</a><span class="sep">/</span><span>Flota</span></div>
+                <h1>Flota</h1>
+                <p class="sub">Todas las máquinas, la más nueva primero. El ID y el código se generan solos.</p>
+            </div>
+            <div class="herramientas">
+                <button class="btn btn-oscuro" data-crear="tipo">+ Tipo</button>
+                <button class="btn btn-primary" data-crear="equipo">+ Nuevo equipo</button>
+            </div>
+        </div>
+    </div>
+    <main>
+        <div class="container">
+            <div class="barra-filtros" data-vista="flota"></div>
+            <section class="panel">
+                <div class="panel-encabezado">
+                    <div class="herramientas"><div class="herramientas" id="modo-flota">
+                        <button class="filtro" data-modo="tabla">Tabla</button>
+                        <button class="filtro" data-modo="mapa">Mapa</button>
+                    </div><button class="btn btn-secondary btn-chico" data-encuadrar="flota" id="btn-encuadrar">Ver toda la flota</button></div>
+                    <span class="contador" id="contador-flota"></span>
+                </div>
+                <div id="flota-tabla" class="panel-cuerpo">
+                    <table>
+                        <thead><tr><th>ID</th><th>Código</th><th>Equipo</th><th>Ubicación GPS</th><th>Horómetro</th><th>Mantención</th><th>Estado</th></tr></thead>
+                        <tbody id="tabla-flota"></tbody>
+                    </table>
+                </div>
+                <div id="flota-mapa" class="mapa-grande" style="display:none">
+                    <div class="mapa-lista" id="mapa-lista"></div>
+                    <div class="mapa" id="mapa-flota"></div>
+                </div>
+            </section>
+            <div class="leyenda" style="margin-top:12px" id="leyenda"></div>
+        </div>
+    </main>
+</section>
+
+<!-- ===================== ARRIENDOS ===================== -->
+<section class="vista" id="vista-arriendos">
+    <div class="page-hero">
+        <div class="container hero-top">
+            <div>
+                <div class="migas"><a href="#" data-ir="dashboard">Dashboard</a><span class="sep">/</span><span>Arriendos</span></div>
+                <h1>Arriendos</h1>
+                <p class="sub">Equipos en faena por cliente, el arriendo más reciente primero.</p>
+            </div>
+        </div>
+    </div>
+    <main>
+        <div class="container">
+            <div class="barra-filtros" data-vista="arriendos"></div>
+            <div id="barra-arriendos"></div>
+            <div id="lista-arriendos"></div>
+        </div>
+    </main>
+</section>
+
+<!-- ===================== ÓRDENES ===================== -->
+<section class="vista" id="vista-ordenes">
+    <div class="page-hero">
+        <div class="container hero-top">
+            <div>
+                <div class="migas"><a href="#" data-ir="dashboard">Dashboard</a><span class="sep">/</span><span>Órdenes de trabajo</span></div>
+                <h1>Órdenes de trabajo</h1>
+                <p class="sub">La más reciente primero. Las OT se crean desde la ficha del equipo.</p>
+            </div>
+        </div>
+    </div>
+    <main>
+        <div class="container">
+            <div class="barra-filtros" data-vista="ordenes"></div>
+            <section class="panel">
+                <div class="panel-encabezado">
+                    <div class="herramientas" id="filtros-ot">
+                        <button class="filtro" data-ot="ABIERTAS">Abiertas</button>
+                        <button class="filtro" data-ot="CERRADA">Cerradas</button>
+                        <button class="filtro" data-ot="todas">Todas</button>
+                    </div>
+                    <span class="contador" id="contador-ot"></span>
+                </div>
+                <div class="panel-cuerpo">
+                    <table>
+                        <thead><tr><th>N° OT</th><th>Equipo</th><th>Servicio</th><th>Fecha</th><th>Horómetro</th><th>Estado</th><th></th></tr></thead>
+                        <tbody id="tabla-ordenes"></tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+    </main>
+</section>
+
+<!-- ===================== TIPOS ===================== -->
+<section class="vista" id="vista-tipos">
+    <div class="page-hero">
+        <div class="container hero-top">
+            <div>
+                <div class="migas"><a href="#" data-ir="dashboard">Dashboard</a><span class="sep">/</span><span>Tipos y pautas</span></div>
+                <h1>Tipos y pautas</h1>
+                <p class="sub">El prefijo de cada tipo arma el código de sus equipos. El más nuevo aparece primero.</p>
+            </div>
+            <button class="btn btn-primary" data-crear="tipo">+ Nuevo tipo</button>
+        </div>
+    </div>
+    <main><div class="container"><div class="tipos-grid" id="tipos-grid"></div></div></main>
+</section>
+
+<!-- ===================== ADMINISTRACIÓN ===================== -->
+<section class="vista" id="vista-admin">
+    <div class="page-hero">
+        <div class="container hero-top">
+            <div>
+                <div class="migas"><a href="#" data-ir="dashboard">Dashboard</a><span class="sep">/</span><span>Administración</span></div>
+                <h1>Administración</h1>
+                <p class="sub">Quién puede entrar al sistema y todo lo que se ha hecho en él.</p>
+            </div>
+            <button class="btn btn-primary" data-crear="usuario">+ Nuevo usuario</button>
+        </div>
+    </div>
+    <main>
+        <div class="container">
+            <div class="tabs" role="tablist" aria-label="Secciones de administración">
+                <button role="tab" id="tab-usuarios" data-tab="usuarios" aria-controls="admin-usuarios">Usuarios <span class="cuenta" id="cuenta-usuarios"></span></button>
+                <button role="tab" id="tab-auditoria" data-tab="auditoria" aria-controls="admin-auditoria">Historial de auditoría <span class="cuenta" id="cuenta-auditoria"></span></button>
+            </div>
+
+            <div id="admin-usuarios" role="tabpanel" aria-labelledby="tab-usuarios">
+                <section class="panel">
+                    <div class="panel-encabezado">
+                        <div><h2>Usuarios</h2><p>Toca un usuario para cambiar su rol, desactivarlo o restablecer su contraseña.</p></div>
+                        <span class="contador" id="contador-usuarios"></span>
+                    </div>
+                    <div class="panel-cuerpo">
+                        <table>
+                            <thead><tr><th>ID</th><th>Nombre y email</th><th>Rol</th><th>Estado</th><th>Verificación</th><th>Último acceso</th></tr></thead>
+                            <tbody id="tabla-usuarios"></tbody>
+                        </table>
+                    </div>
+                </section>
+                <div class="roles-ayuda" id="roles-ayuda"></div>
+            </div>
+
+            <div id="admin-auditoria" role="tabpanel" aria-labelledby="tab-auditoria">
+                <div class="barra-filtros abierta">
+                    <div class="filtros-fila">
+                        <div class="filtro-campo"><label>Usuario<select data-fa="usuario"></select></label></div>
+                        <div class="filtro-campo"><label>Acción<select data-fa="accion"></select></label></div>
+                        <div class="filtro-campo"><label>Módulo<select data-fa="modulo"></select></label></div>
+                        <div class="filtro-campo"><label>Período<select data-fa="periodo">
+                            <option value="">Todo el historial</option><option value="1">Hoy</option><option value="7">Últimos 7 días</option><option value="30">Últimos 30 días</option>
+                        </select></label></div>
+                    </div>
+                    <div class="filtro-campo" style="margin-top:12px"><label>Buscar<input data-fa="q" type="search" placeholder="Código de equipo, N° de OT, arriendo, email…"></label></div>
+                </div>
+                <section class="panel">
+                    <div class="panel-encabezado">
+                        <div><h2>Historial de auditoría</h2><p>Lo más reciente primero. Toca un registro de equipo u OT para abrir su ficha.</p></div>
+                        <div class="herramientas"><span class="contador" id="contador-auditoria"></span><button class="btn btn-secondary btn-chico" id="exportar-csv">Descargar CSV</button></div>
+                    </div>
+                    <div class="panel-cuerpo">
+                        <table>
+                            <thead><tr><th>Fecha y hora</th><th>Usuario</th><th>Acción</th><th>Módulo</th><th>Registro</th><th>Detalle</th></tr></thead>
+                            <tbody id="tabla-auditoria"></tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </main>
+</section>
+
+<footer class="site-footer">
+    <div class="container">
+        <span>Vilas Motor — Sistema de gestión de mantenimiento · Maqueta con datos de ejemplo</span>
+        <span><button id="btn-reset">Restablecer datos de ejemplo</button></span>
+    </div>
+</footer>
+
+<div class="fondo-oscuro" id="fondo"></div>
+<aside class="ficha" id="ficha" aria-hidden="true">
+    <div class="ficha-cabecera" id="ficha-cabecera"></div>
+    <div class="ficha-cuerpo" id="ficha-cuerpo"></div>
+</aside>
+
+<div class="modal" id="modal" role="dialog" aria-modal="true">
+    <div class="modal-cabecera">
+        <div><span class="eyebrow" id="modal-eyebrow">Nuevo</span><h2 id="modal-titulo">Nuevo</h2></div>
+        <button class="icon-btn" data-cerrar-modal title="Cerrar"><svg viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+    </div>
+    <div class="modal-cuerpo" id="modal-cuerpo"></div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* =====================================================================
+   DATOS DE EJEMPLO  (editar solo este bloque para cargar datos reales)
+   Lo marcado "planilla" viene de PLANILLA DE V168.xlsx y
+   PAUTA INSUMOS GENERADOR G45QX.xlsx. El ID de cada equipo es su
+   posición en esta lista (1, 2, 3...). Los nuevos siguen el correlativo.
+   ===================================================================== */
+var BASE = { nombre: 'Taller Vilas Motor', lat: -20.2448, lng: -70.1393 };   // Iquique (ejemplo)
+var UMBRAL = { HORAS: 100, KM: 1000 };                                      // aviso "por vencer"
+
+// Usuarios iniciales de la demo. La clave solo se usa para calcular su hash
+// al cargar los datos; en el sistema se guarda el hash, nunca el texto.
+var USUARIOS = [
+    { nombre: 'Planificador Vilas Motor', email: 'planificador@vilasmotor.cl', clave: 'VilasMotor2026', rol: 'ADMIN' },
+    { nombre: 'Juan Pérez', email: 'tecnico@vilasmotor.cl', clave: 'TecnicoVM2026', rol: 'TECNICO' },
+    { nombre: 'Camila Rojas', email: 'crojas@vilasmotor.cl', clave: 'PlanificaVM2026', rol: 'PLANIFICADOR', activo: false }
+];
+
+var FAENAS = [
+    { nombre: 'Puerto de Iquique', lat: -20.2052, lng: -70.1508 },
+    { nombre: 'Zofri, Iquique', lat: -20.2195, lng: -70.1370 },
+    { nombre: 'Alto Hospicio', lat: -20.2690, lng: -70.0986 },
+    { nombre: 'Faena Pozo Almonte', lat: -20.2569, lng: -69.7859 },
+    { nombre: 'Faena minera Cerro Colorado', lat: -20.0450, lng: -69.2620 }
+];
+
+var INS_GEN = function (extra) {   // planilla: pauta de insumos G45QX
+    return [['Aceite motor Total Rubia Tir 7400 15W40', '11 L'], ['Filtro aceite motor 02/971635', '1'], ['Filtro combustible 02/971620', '1'], ['Filtro aire exterior 02/971664', '1']].concat(extra);
+};
+var DATOS = {
+    tipos: [
+        { nombre: 'Grúa horquilla', unidad: 'HORAS', intervalos: [250, 500, 1000, 2000],
+          insumos: { 250: [['Aceite motor 15W40', '8 L'], ['Filtro aceite motor', '1'], ['Filtro combustible', '1'], ['Filtro aire exterior', '1'], ['Logo adhesivo mantención', '1']],
+                     1000: [['Aceite motor 15W40', '8 L'], ['Filtro aceite motor', '1'], ['Filtro combustible', '1'], ['Filtro aire exterior', '1'], ['Filtro aire interior', '1'], ['Logo adhesivo mantención', '1']] } },
+        { nombre: 'Generador', unidad: 'HORAS', intervalos: [250, 500, 1000, 2000],
+          insumos: { 250: INS_GEN([['Logo adhesivo mantención', '1'], ['Refrigerante', '10 L']]),
+                     500: INS_GEN([['Correa ventilador JCB G45QX', '1'], ['Logo adhesivo mantención', '1']]),
+                     1000: INS_GEN([['Filtro aire interior', '1'], ['Logo adhesivo mantención', '1']]),
+                     2000: INS_GEN([['Filtro aire interior', '1'], ['Logo adhesivo mantención', '1']]) } },
+        { nombre: 'Excavadora', unidad: 'HORAS', intervalos: [500, 1000], insumos: {} },
+        { nombre: 'Retroexcavadora', unidad: 'HORAS', intervalos: [500, 1000], insumos: {} },
+        { nombre: 'Camión', unidad: 'KM', intervalos: [10000, 20000], insumos: {} }
+    ],
+    equipos: [
+        { tipo: 'Grúa horquilla', codigoAnterior: 'V168', marca: 'Toyota', modelo: '8FGU25', detalle: '3.5 ton', patente: 'SVTJ39',
+          estado: 'EN_FAENA', horometro: 3620, ultimoServicio: 3157, cliente: 'Servicios Portuarios Iquique SpA', desde: '2026-09-01', hasta: '2026-12-31',
+          lugar: 'Puerto de Iquique', lat: -20.2052, lng: -70.1508 },
+        { tipo: 'Generador', codigoAnterior: 'VG10', marca: 'JCB', modelo: 'G45QX', patente: '',
+          estado: 'EN_FAENA', horometro: 480, ultimoServicio: 250, cliente: 'Minera Cerro Dragón SpA', desde: '2026-10-05', hasta: '2026-11-30',
+          lugar: 'Faena Pozo Almonte', lat: -20.2569, lng: -69.7859 },
+        { tipo: 'Generador', codigoAnterior: 'VG11', marca: 'JCB', modelo: 'G45QX', patente: '',
+          estado: 'DISPONIBLE', horometro: 1105, ultimoServicio: 1000, lugar: 'Taller', lat: -20.2452, lng: -70.1389 },
+        { tipo: 'Excavadora', codigoAnterior: 'EX-204', marca: 'Caterpillar', modelo: '320', patente: '',
+          estado: 'EN_MANTENIMIENTO', horometro: 3120, ultimoServicio: 2500, lugar: 'Taller', lat: -20.2444, lng: -70.1398, sinSenal: true },
+        { tipo: 'Retroexcavadora', codigoAnterior: 'RET-118', marca: 'JCB', modelo: '3CX', patente: '',
+          estado: 'DISPONIBLE', horometro: 1450.5, ultimoServicio: 1000, lugar: 'Taller', lat: -20.2455, lng: -70.1401 },
+        { tipo: 'Camión', codigoAnterior: 'CAM-301', marca: 'Mercedes-Benz', modelo: 'Actros 2645', patente: 'BJKT45',
+          estado: 'EN_FAENA', horometro: 128400, ultimoServicio: 120000, cliente: 'Logística Tarapacá SpA', desde: '2026-10-20', hasta: '',
+          lugar: 'Ruta 16, Alto Hospicio', lat: -20.2690, lng: -70.0986, ruta: true }
+    ],
+    ordenes: [   // planilla: historial de mantenciones de la V168
+        { numero: 89867,  equipo: 'V168', fecha: '2023-10-16', servicio: 250,  horometro: 828,  estado: 'CERRADA' },
+        { numero: 90717,  equipo: 'V168', fecha: '2023-11-29', servicio: 1000, horometro: 1083, estado: 'CERRADA' },
+        { numero: 91902,  equipo: 'V168', fecha: '2024-02-05', servicio: 250,  horometro: 1325, estado: 'CERRADA' },
+        { numero: 92935,  equipo: 'V168', fecha: '2024-04-04', servicio: 500,  horometro: 1575, estado: 'CERRADA' },
+        { numero: 94281,  equipo: 'V168', fecha: '2024-07-05', servicio: 250,  horometro: 1803, estado: 'CERRADA' },
+        { numero: 98470,  equipo: 'V168', fecha: '2025-02-26', servicio: 2000, horometro: 2080, estado: 'CERRADA' },
+        { numero: 100666, equipo: 'V168', fecha: '2025-06-26', servicio: 250,  horometro: 2363, estado: 'CERRADA' },
+        { numero: 102477, equipo: 'V168', fecha: '2025-10-01', servicio: 500,  horometro: 2601, estado: 'CERRADA' },
+        { numero: 105418, equipo: 'V168', fecha: '2026-03-13', servicio: 500,  horometro: 2896, estado: 'CERRADA' },
+        { numero: 106948, equipo: 'V168', fecha: '2026-05-29', servicio: 1000, horometro: 3157, estado: 'CERRADA' },
+        { numero: 107012, equipo: 'EX-204', fecha: '2026-10-24', servicio: 500, horometro: 3120, estado: 'EN_EJECUCION' }   // ejemplo
+    ]
+};
+
+var ESTADOS = {
+    DISPONIBLE: { txt: 'Disponible', badge: 'badge-ok', color: '#157f3b' },
+    EN_FAENA: { txt: 'En faena', badge: 'badge-azul', color: '#1f4fd1' },
+    EN_MANTENIMIENTO: { txt: 'En mantención', badge: 'badge-alerta', color: '#e10600' },
+    INTERNO: { txt: 'Interno', badge: 'badge-neutral', color: '#52525b' }
+};
+var MANT = {
+    VENCIDO: { txt: 'Vencida', badge: 'badge-alerta' }, POR_VENCER: { txt: 'Por vencer', badge: 'badge-warn' },
+    AL_DIA: { txt: 'Al día', badge: 'badge-ok' }, SIN_PLAN: { txt: 'Sin plan', badge: 'badge-neutral' }
+};
+var ESTADOS_OT = {
+    PROGRAMADA: { txt: 'Programada', badge: 'badge-neutral' }, EN_EJECUCION: { txt: 'En ejecución', badge: 'badge-warn' }, CERRADA: { txt: 'Cerrada', badge: 'badge-ok' }
+};
+
+/* =====================================================================
+   UTILIDADES
+   ===================================================================== */
+function sinTildes(t) { return String(t).normalize('NFD').replace(/[̀-ͯ]/g, ''); }
+function esc(t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+function fmt(n, dec) { return Number(n).toLocaleString('es-CL', { minimumFractionDigits: dec || 0, maximumFractionDigits: dec || 0 }); }
+function pad(n, l) { return String(n).padStart(l || 4, '0'); }
+function fechaCL(iso) { if (!iso) return '—'; var p = iso.split('-'); return p[2] + '-' + p[1] + '-' + p[0]; }
+function hoyISO() { var d = new Date(); return d.getFullYear() + '-' + pad(d.getMonth() + 1, 2) + '-' + pad(d.getDate(), 2); }
+function unidadCorta(u) { return u === 'KM' ? 'km' : 'h'; }
+function maxDe(lista, campo) { return lista.reduce(function (m, x) { return Math.max(m, x[campo] || 0); }, 0); }
+function esNuevo(x) { return x && x.creado && Date.now() - x.creado < 15 * 60 * 1000; }
+var NUEVO = '<span class="nuevo">Nuevo</span>';
+var PIN = '<svg viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>';
+
+/* =====================================================================
+   CÓDIGOS, NOMBRES E ID AUTOMÁTICOS
+   ===================================================================== */
+var PALABRAS_VACIAS = ['de', 'del', 'la', 'el', 'los', 'las', 'y', 'para', 'con'];
+
+// "Grúa horquilla" -> GH · "Generador" -> GE · si ya existe, prueba otras letras.
+function generarPrefijo(nombre, ocupados) {
+    var palabras = sinTildes(nombre).toUpperCase().replace(/[^A-Z0-9 ]/g, ' ').split(/\s+/)
+        .filter(function (p) { return p && PALABRAS_VACIAS.indexOf(p.toLowerCase()) === -1 && !/^\d+$/.test(p); });
+    if (!palabras.length) return '';
+    var c = [], p0 = palabras[0];
+    if (palabras.length > 1) c.push(p0[0] + palabras[1][0]);
+    for (var i = 1; i < p0.length; i++) c.push(p0[0] + p0[i]);
+    if (palabras.length > 1) for (var j = 1; j < palabras[1].length; j++) c.push(p0[0] + palabras[1][j]);
+    for (var k = 0; k < c.length; k++) if (ocupados.indexOf(c[k]) === -1) return c[k];
+    for (var n = 2; n < 100; n++) if (ocupados.indexOf(p0[0] + n) === -1) return p0[0] + n;
+    return p0.slice(0, 3);
+}
+function sugerirUnidad(nombre) { return /cami[oó]n|camioneta|veh[ií]culo|furg[oó]n|auto|bus/i.test(nombre) ? 'KM' : 'HORAS'; }
+function siguienteCodigo(prefijo) {   // GH -> GH-002
+    var max = 0;
+    estado.equipos.forEach(function (e) { var m = e.codigo.match(/^([A-Z0-9]+)-(\d+)$/); if (m && m[1] === prefijo) max = Math.max(max, +m[2]); });
+    return prefijo + '-' + pad(max + 1, 3);
+}
+function siguienteId() { return maxDe(estado.equipos, 'id') + 1; }             // ID global correlativo: 1, 2, 3...
+function idTxt(id) { return '#' + pad(id); }
+function telemetriaDe(id) { return 'TLM-' + pad(id); }                           // ID de telemetría correlativo
+function nombreEquipo(tipo, marca, modelo, detalle) { return [tipo, marca, modelo, detalle].filter(Boolean).join(' ').replace(/\s+/g, ' ').trim(); }
+function siguienteOT() { return maxDe(estado.ordenes, 'numero') + 1; }
+function siguienteArriendo() {
+    var max = 0; estado.arriendos.forEach(function (a) { max = Math.max(max, parseInt(a.numero.slice(4), 10)); });
+    return 'ARR-' + pad(max + 1);
+}
+
+/* =====================================================================
+   ESTADO (se guarda en el navegador)
+   ===================================================================== */
+var CLAVE = 'vilasmotor-maqueta-v4';
+var estado;
+
+function construirDesdeDatos() {
+    var s = { tipos: [], equipos: [], ordenes: [], arriendos: [] };
+    estado = s;
+    DATOS.tipos.forEach(function (t, i) {
+        s.tipos.push({ id: i + 1, nombre: t.nombre, prefijo: generarPrefijo(t.nombre, s.tipos.map(function (x) { return x.prefijo; })),
+                       unidad: t.unidad, intervalos: t.intervalos.slice(), insumos: t.insumos || {}, creado: 0 });
+    });
+    var codigos = {};
+    DATOS.equipos.forEach(function (d, i) {
+        var id = i + 1, codigo = siguienteCodigo(tipoPorNombre(d.tipo).prefijo);
+        codigos[d.codigoAnterior] = codigo;
+        s.equipos.push({
+            id: id, codigo: codigo, codigoAnterior: d.codigoAnterior || '', tipo: d.tipo,
+            nombre: nombreEquipo(d.tipo, d.marca, d.modelo, d.detalle), marca: d.marca, modelo: d.modelo, detalle: d.detalle || '',
+            patente: d.patente || '', estado: d.estado, horometro: d.horometro, ultimoServicio: d.ultimoServicio,
+            cliente: d.cliente || '', lugar: d.lugar, telemetria: telemetriaDe(id), lat: d.lat, lng: d.lng,
+            sinSenal: !!d.sinSenal, ruta: !!d.ruta, ultimaSenal: d.sinSenal ? Date.now() - 31 * 3600000 : Date.now(), velocidad: 0, rutaPos: 0, creado: 0
+        });
+        if (d.estado === 'EN_FAENA' && d.cliente) {
+            s.arriendos.push({ numero: 'ARR-' + pad(s.arriendos.length + 1), equipo: codigo, cliente: d.cliente, lugar: d.lugar, desde: d.desde, hasta: d.hasta || '', estado: 'VIGENTE', creado: 0 });
+        }
+    });
+    DATOS.ordenes.forEach(function (o) {
+        s.ordenes.push({ numero: o.numero, equipo: codigos[o.equipo] || o.equipo, fecha: o.fecha, servicio: o.servicio, horometro: o.horometro, estado: o.estado, creado: 0 });
+    });
+    s.usuarios = semillaUsuarios();
+    s.auditoria = semillaAuditoria(s);
+    return s;
+}
+function cargar() {
+    try {
+        var g = localStorage.getItem(CLAVE);
+        if (g) {
+            estado = JSON.parse(g);
+            // Datos guardados por la versión anterior: se les agregan usuarios y auditoría sin perder nada
+            if (!estado.usuarios) estado.usuarios = semillaUsuarios();
+            if (!estado.auditoria) estado.auditoria = semillaAuditoria(estado);
+            return;
+        }
+    } catch (e) {}
+    estado = construirDesdeDatos();
+}
+function guardar() { try { localStorage.setItem(CLAVE, JSON.stringify(estado)); } catch (e) {} }
+
+function tipoPorNombre(n) { return estado.tipos.filter(function (t) { return t.nombre === n; })[0]; }
+function equipoPorCodigo(c) { return estado.equipos.filter(function (e) { return e.codigo === c; })[0]; }
+function arriendoVigente(c) { return estado.arriendos.filter(function (a) { return a.equipo === c && a.estado === 'VIGENTE'; })[0]; }
+function otAbierta(c) { return estado.ordenes.filter(function (o) { return o.equipo === c && o.estado !== 'CERRADA'; })[0]; }
+
+/* =====================================================================
+   PRÓXIMO SERVICIO Y SEÑAL
+   ===================================================================== */
+function proximoServicio(e) {
+    var t = tipoPorNombre(e.tipo);
+    if (!t || !t.intervalos.length) return { estado: 'SIN_PLAN' };
+    var base = Math.min.apply(null, t.intervalos), vence = e.ultimoServicio + base;
+    var nominal = (Math.floor(e.ultimoServicio / base) + 1) * base, servicio = base;
+    t.intervalos.forEach(function (i) { if (nominal % i === 0 && i > servicio) servicio = i; });
+    var restante = vence - e.horometro;
+    return { servicio: servicio, vence: vence, restante: restante, base: base, unidad: t.unidad,
+             estado: restante < 0 ? 'VENCIDO' : (restante <= UMBRAL[t.unidad] ? 'POR_VENCER' : 'AL_DIA'),
+             insumos: (t.insumos && (t.insumos[servicio] || t.insumos[base])) || [] };
+}
+function haceCuanto(t) {
+    var s = Math.max(0, (Date.now() - t) / 1000);
+    if (s < 60) return Math.round(s) + ' s'; if (s < 3600) return Math.round(s / 60) + ' min';
+    if (s < 86400) return Math.round(s / 3600) + ' h'; return Math.round(s / 86400) + ' d';
+}
+function senal(e) {
+    if (e.sinSenal) return { clase: 'off', txt: 'Sin señal ' + haceCuanto(e.ultimaSenal) };
+    var s = (Date.now() - e.ultimaSenal) / 1000;
+    return { clase: s > 60 ? 'espera' : '', txt: s < 8 ? 'En línea' : 'Hace ' + haceCuanto(e.ultimaSenal) };
+}
+function celdaRestante(p) {
+    if (p.estado === 'SIN_PLAN') return '—';
+    var u = unidadCorta(p.unidad), pct = p.restante < 0 ? 100 : Math.max(4, Math.min(100, p.restante / p.base * 100));
+    var clase = p.estado === 'VENCIDO' ? 'alerta' : (p.estado === 'POR_VENCER' ? 'warn' : '');
+    return '<span class="horas' + (p.restante < 0 ? ' negativo' : '') + '">' + (p.restante < 0 ? 'Pasado por ' + fmt(-p.restante) : fmt(p.restante)) + ' ' + u +
+           '</span><span class="barra ' + clase + '"><i style="width:' + pct + '%"></i></span>';
+}
+function badge(dic, k) { return '<span class="badge ' + dic[k].badge + '">' + dic[k].txt + '</span>'; }
+function celdaId(e) { return '<span class="id-equipo">' + idTxt(e.id) + '</span>'; }
+function celdaCodigo(e) { return '<span class="codigo">' + esc(e.codigo) + '</span>' + (esNuevo(e) ? NUEVO : '') + (e.codigoAnterior ? '<span class="codigo-ant">ant. ' + esc(e.codigoAnterior) + '</span>' : ''); }
+function celdaUbicacion(e) { return '<button class="ubic-btn" data-ver-mapa="' + esc(e.codigo) + '" title="Ver en el mapa">' + PIN + esc(e.lugar) + '</button>' + (e.cliente ? '<span class="codigo-ant">' + esc(e.cliente) + '</span>' : ''); }
+
+/* =====================================================================
+   FILTROS COMPARTIDOS
+   Un solo filtro para Dashboard, Flota, Arriendos y Órdenes: lo que
+   eliges en una pantalla se mantiene en las demás, así los números calzan.
+   ===================================================================== */
+var filtro = { tipo: '', marca: '', modelo: '', estado: '', mant: '', senal: '', cliente: '', q: '' };
+var CAMPOS = [
+    { k: 'tipo', label: 'Tipo', todos: 'Todos los tipos' },
+    { k: 'marca', label: 'Marca', todos: 'Todas las marcas' },
+    { k: 'modelo', label: 'Modelo', todos: 'Todos los modelos' },
+    { k: 'estado', label: 'Estado', todos: 'Todos los estados' },
+    { k: 'mant', label: 'Mantención', todos: 'Cualquier mantención' },
+    { k: 'senal', label: 'Señal GPS', todos: 'Con y sin señal' },
+    { k: 'cliente', label: 'Cliente', todos: 'Todos los clientes' }
+];
+var ETIQUETA = { tipo: 'Tipo', marca: 'Marca', modelo: 'Modelo', estado: 'Estado', mant: 'Mantención', senal: 'Señal', cliente: 'Cliente', q: 'Búsqueda' };
+var ORDEN_FIJO = { estado: Object.keys(ESTADOS), mant: Object.keys(MANT), senal: ['on', 'off'] };
+
+function valorDe(e, k) {
+    if (k === 'mant') return proximoServicio(e).estado;
+    if (k === 'senal') return e.sinSenal ? 'off' : 'on';
+    if (k === 'cliente') return e.cliente || '__sin';
+    return e[k];
+}
+function textoValor(k, v) {
+    if (k === 'estado') return ESTADOS[v] ? ESTADOS[v].txt : v;
+    if (k === 'mant') return MANT[v] ? MANT[v].txt : v;
+    if (k === 'senal') return v === 'on' ? 'Con señal' : 'Sin señal';
+    if (k === 'cliente' && v === '__sin') return 'Sin cliente (en taller)';
+    return v;
+}
+// ignorar: lista de campos que no se aplican (para contar "si cambio este filtro, ¿cuántos quedan?")
+function pasa(e, ignorar) {
+    ignorar = ignorar || [];
+    for (var i = 0; i < CAMPOS.length; i++) {
+        var k = CAMPOS[i].k;
+        if (filtro[k] && ignorar.indexOf(k) === -1 && valorDe(e, k) !== filtro[k]) return false;
+    }
+    if (filtro.q && ignorar.indexOf('q') === -1) {
+        var q = sinTildes(filtro.q.toLowerCase());
+        if (sinTildes([idTxt(e.id), e.codigo, e.codigoAnterior, e.nombre, e.patente, e.lugar, e.cliente].join(' ').toLowerCase()).indexOf(q) === -1) return false;
+    }
+    return true;
+}
+function equiposFiltrados() { return estado.equipos.filter(function (e) { return pasa(e); }).sort(function (a, b) { return b.id - a.id; }); }
+// Cuenta exactamente lo que mostrará la lista al tocar el número
+function contar(set) {
+    var claves = Object.keys(set || {});
+    return estado.equipos.filter(function (e) {
+        return pasa(e, claves) && claves.every(function (k) { return valorDe(e, k) === set[k]; });
+    });
+}
+function filtrosActivos() { return Object.keys(filtro).filter(function (k) { return filtro[k]; }); }
+
+function opcionesDe(k) {
+    var cuenta = {};
+    estado.equipos.forEach(function (e) { if (pasa(e, [k])) { var v = valorDe(e, k); if (v) cuenta[v] = (cuenta[v] || 0) + 1; } });
+    var vals = ORDEN_FIJO[k] ? ORDEN_FIJO[k].filter(function (v) { return cuenta[v]; })
+        : Object.keys(cuenta).sort(function (a, b) { return a === '__sin' ? 1 : b === '__sin' ? -1 : a.localeCompare(b, 'es'); });
+    return vals.map(function (v) { return { v: v, n: cuenta[v] }; });
+}
+
+function pintarBarraFiltros(vista) {
+    var cont = document.querySelector('.barra-filtros[data-vista="' + vista + '"]');
+    if (!cont) return;
+    if (!cont.dataset.listo) {
+        cont.innerHTML = '<div class="filtros-fila">' + CAMPOS.map(function (c) {
+            return '<div class="filtro-campo"><label>' + c.label + '<select data-fd="' + c.k + '"></select></label></div>';
+        }).join('') + '<div class="filtro-campo"><label>Buscar<input data-fd="q" type="search" placeholder="ID, código, patente, lugar…"></label></div></div>' +
+            '<div class="filtros-pie"><span class="fd-resumen"></span><button class="btn btn-secondary btn-chico toggle-filtros" data-toggle-filtros>Filtrar</button><div class="chips-activos"></div></div>';
+        cont.querySelectorAll('label').forEach(function (l) { l.style.display = 'block'; l.style.fontFamily = 'var(--display)'; });
+        cont.dataset.listo = '1';
+    }
+    CAMPOS.forEach(function (c) {
+        var sel = cont.querySelector('select[data-fd="' + c.k + '"]');
+        var ops = opcionesDe(c.k);
+        var html = '<option value="">' + c.todos + '</option>' + ops.map(function (o) {
+            return '<option value="' + esc(o.v) + '"' + (o.v === filtro[c.k] ? ' selected' : '') + '>' + esc(textoValor(c.k, o.v)) + ' (' + o.n + ')</option>';
+        }).join('');
+        if (filtro[c.k] && !ops.some(function (o) { return o.v === filtro[c.k]; })) {
+            html += '<option value="' + esc(filtro[c.k]) + '" selected>' + esc(textoValor(c.k, filtro[c.k])) + ' (0)</option>';
+        }
+        if (sel.dataset.html !== html && document.activeElement !== sel) { sel.innerHTML = html; sel.dataset.html = html; }
+        sel.closest('.filtro-campo').classList.toggle('activo', !!filtro[c.k]);
+    });
+    var q = cont.querySelector('input[data-fd="q"]');
+    if (document.activeElement !== q) q.value = filtro.q;
+    var n = equiposFiltrados().length, total = estado.equipos.length, act = filtrosActivos();
+    cont.querySelector('.fd-resumen').innerHTML = act.length ? 'Filtrando: <b>' + n + '</b> de ' + total + ' equipos' : 'Sin filtros: <b>' + total + '</b> equipos';
+    cont.querySelector('.chips-activos').innerHTML = act.map(function (k) {
+        return '<button class="chip-activo" data-quitar-fd="' + k + '">' + ETIQUETA[k] + ': ' + esc(textoValor(k, filtro[k])) + ' <span>✕</span></button>';
+    }).join('') + (act.length ? '<button class="link-btn" data-quitar-fd="todo">Limpiar filtros</button>' : '');
+}
+function cambiarFiltro(k, v) {
+    if (k === 'todo') Object.keys(filtro).forEach(function (x) { filtro[x] = ''; }); else filtro[k] = v;
+    Object.keys(mapas).forEach(function (m) { mapas[m]._ajustado = false; });
+    repintar();
+}
+
+/* =====================================================================
+   VISTAS
+   ===================================================================== */
+var vistaActual = 'dashboard', modoFlota = 'tabla', filtroOT = 'ABIERTAS', recien = null;
+
+// destino al tocar un número: {vista, set:{campo:valor}, ot}
+function ir(dest) { return esc(JSON.stringify(dest)); }
+
+function pintarDashboard() {
+    pintarBarraFiltros('dashboard');
+    var eq = equiposFiltrados(), cod = eq.map(function (e) { return e.codigo; });
+    var disp = contar({ estado: 'DISPONIBLE' }).length;
+    var faena = contar({ estado: 'EN_FAENA' });
+    var clientes = {}; faena.forEach(function (e) { if (e.cliente) clientes[e.cliente] = 1; });
+    var nClientes = Object.keys(clientes).length;
+    var on = contar({ senal: 'on' }).length, off = contar({ senal: 'off' }).length;
+    var otsEq = estado.ordenes.filter(function (o) { return cod.indexOf(o.equipo) !== -1; });
+    var abiertas = otsEq.filter(function (o) { return o.estado !== 'CERRADA'; }).length;
+
+    document.getElementById('kpis').innerHTML =
+        kpi('Equipos', eq.length, { vista: 'flota' },
+            disp ? link(disp, 'disponibles', { vista: 'flota', set: { estado: 'DISPONIBLE' } }) : 'ninguno disponible') +
+        kpi('En faena', faena.length, { vista: 'flota', set: { estado: 'EN_FAENA' } },
+            nClientes ? link(nClientes, 'cliente' + (nClientes === 1 ? '' : 's'), { vista: 'arriendos' }) : 'sin arriendos') +
+        kpi('Señal GPS', on + '<small>/' + (on + off) + '</small>', { vista: 'flota', set: { senal: 'on' } },
+            off ? link(off, 'sin señal', { vista: 'flota', set: { senal: 'off' } }, true) : 'todos reportan') +
+        kpi('Órdenes abiertas', abiertas, { vista: 'ordenes', ot: 'ABIERTAS' },
+            link(otsEq.length, 'en el historial', { vista: 'ordenes', ot: 'todas' }));
+
+    var venc = contar({ mant: 'VENCIDO' }).length, porV = contar({ mant: 'POR_VENCER' }).length;
+    document.getElementById('que-hacer').innerHTML =
+        tarjeta('roja', venc, 'Mantención vencida', 'intervalo ya cumplido', { vista: 'flota', set: { mant: 'VENCIDO' } }) +
+        tarjeta('ambar', porV, 'Mantención por vencer', 'dentro de ' + UMBRAL.HORAS + ' h / ' + fmt(UMBRAL.KM) + ' km', { vista: 'flota', set: { mant: 'POR_VENCER' } }) +
+        tarjeta('azul', abiertas, 'Órdenes abiertas', 'por ejecutar o cerrar', { vista: 'ordenes', ot: 'ABIERTAS' }) +
+        tarjeta('neutra', off, 'Equipos sin señal', 'pedir horómetro a mano', { vista: 'flota', set: { senal: 'off' } });
+
+    document.querySelectorAll('#chips-mant .filtro').forEach(function (b) { b.classList.toggle('activo', b.dataset.mant === filtro.mant); });
+    var orden = { VENCIDO: 0, POR_VENCER: 1, AL_DIA: 2, SIN_PLAN: 3 };
+    var filas = eq.map(function (e) { return { e: e, p: proximoServicio(e) }; }).sort(function (a, b) {
+        return (orden[a.p.estado] - orden[b.p.estado]) || ((a.p.restante || 0) - (b.p.restante || 0));
+    });
+    document.getElementById('tabla-pronostico').innerHTML = filas.map(function (x) {
+        return '<tr class="clic" data-equipo="' + esc(x.e.codigo) + '"><td>' + celdaId(x.e) + '</td><td>' + celdaCodigo(x.e) + '</td><td>' + esc(x.e.tipo) + '</td><td>' +
+            (x.p.servicio ? 'Servicio ' + fmt(x.p.servicio) + ' ' + unidadCorta(x.p.unidad) : '—') + (otAbierta(x.e.codigo) ? ' <span class="badge badge-neutral">OT abierta</span>' : '') +
+            '</td><td>' + celdaRestante(x.p) + '</td><td>' + badge(MANT, x.p.estado) + '</td></tr>';
+    }).join('') || '<tr><td colspan="6" class="vacio">Ningún equipo coincide con los filtros.</td></tr>';
+    asegurarMapa('mapa-dash', 'dash', eq);
+}
+function kpi(label, valor, dest, extra) {
+    return '<div class="stat-card clic" role="link" tabindex="0" data-ir-a="' + ir(dest) + '" title="Ver la lista"><span class="stat-number">' + valor + '</span><span class="stat-label">' + label + '</span><span class="stat-extra">' + extra + '</span></div>';
+}
+function link(n, txt, dest, rojo) {
+    return '<button class="stat-link" data-ir-a="' + ir(dest) + '"><b' + (rojo ? ' class="rojo"' : '') + '>' + n + '</b> ' + txt + '</button>';
+}
+function tarjeta(tono, n, t, d, dest) {
+    return '<button class="que-hacer-card que-hacer-' + tono + '" data-ir-a="' + ir(dest) + '"><span class="que-hacer-numero">' + n + '</span><span class="que-hacer-titulo">' + t + '</span><span class="que-hacer-detalle">' + d + '</span></button>';
+}
+
+function pintarFlota() {
+    pintarBarraFiltros('flota');
+    var lista = equiposFiltrados();
+    document.getElementById('contador-flota').innerHTML = '<b>' + lista.length + '</b> equipo' + (lista.length === 1 ? '' : 's');
+    document.getElementById('tabla-flota').innerHTML = lista.map(function (e) {
+        var t = tipoPorNombre(e.tipo), s = senal(e);
+        return '<tr class="clic' + (recien === e.codigo ? ' recien' : '') + '" data-equipo="' + esc(e.codigo) + '"><td>' + celdaId(e) + '</td><td>' + celdaCodigo(e) + '</td><td>' + esc(e.nombre) +
+            (e.patente ? '<span class="codigo-ant">Patente ' + esc(e.patente) + '</span>' : '') + '</td><td>' + celdaUbicacion(e) + '<span class="codigo-ant"><span class="senal ' + s.clase + '">' + s.txt + '</span></span>' +
+            '</td><td class="horas">' + fmt(e.horometro, t.unidad === 'KM' ? 0 : 1) + ' ' + unidadCorta(t.unidad) + '</td><td>' + badge(MANT, proximoServicio(e).estado) +
+            '</td><td>' + badge(ESTADOS, e.estado) + '</td></tr>';
+    }).join('') || '<tr><td colspan="7" class="vacio">Ningún equipo coincide con los filtros. <button class="link-btn" data-quitar-fd="todo">Limpiar filtros</button></td></tr>';
+    document.getElementById('mapa-lista').innerHTML = lista.map(function (e) {
+        return '<div class="mapa-item' + (seleccionMapa === e.codigo ? ' sel' : '') + '" data-foco="' + esc(e.codigo) + '"><span class="pin" style="background:' + ESTADOS[e.estado].color + '"></span><div><span class="codigo">' + esc(e.codigo) + '</span> <span class="id-equipo">' + idTxt(e.id) + '</span><small>' + esc(e.lugar) + '</small></div><span class="senal ' + senal(e).clase + '"></span></div>';
+    }).join('') || '<div class="vacio">Sin resultados.</div>';
+    document.getElementById('flota-tabla').style.display = modoFlota === 'tabla' ? '' : 'none';
+    document.getElementById('flota-mapa').style.display = modoFlota === 'mapa' ? '' : 'none';
+    document.querySelectorAll('#modo-flota .filtro').forEach(function (b) { b.classList.toggle('activo', b.dataset.modo === modoFlota); });
+    document.getElementById('btn-encuadrar').hidden = modoFlota !== 'mapa';
+    if (modoFlota === 'mapa') asegurarMapa('mapa-flota', 'flota', lista);
+}
+
+function pintarArriendos() {
+    pintarBarraFiltros('arriendos');
+    var disp = contar({ estado: 'DISPONIBLE' }).sort(function (a, b) { return b.id - a.id; });
+    document.getElementById('barra-arriendos').innerHTML =
+        '<div class="barra-acciones"><div class="info"><b>' + disp.length + '</b> equipo' + (disp.length === 1 ? '' : 's') + ' disponible' + (disp.length === 1 ? '' : 's') + ' para arrendar' +
+        (disp.length ? '<div class="disponibles">' + disp.map(function (e) { return '<button data-arrendar="' + esc(e.codigo) + '" title="' + esc(e.nombre) + '">' + esc(e.codigo) + '</button>'; }).join('') + '</div>'
+                     : '<div class="codigo-ant">Agrega maquinaria o termina un arriendo para liberar equipos.</div>') +
+        '</div><div class="herramientas"><button class="btn btn-secondary" data-crear="equipo">+ Agregar maquinaria</button><button class="btn btn-primary" data-crear="arriendo"' + (disp.length ? '' : ' disabled') + '>+ Nuevo arriendo</button></div></div>';
+    var enFaena = contar({ estado: 'EN_FAENA' });
+    var grupos = {};
+    enFaena.forEach(function (e) {
+        var a = arriendoVigente(e.codigo), c = e.cliente || 'Sin cliente';
+        (grupos[c] = grupos[c] || []).push({ e: e, a: a, n: a ? parseInt(a.numero.slice(4), 10) : 0 });
+    });
+    Object.keys(grupos).forEach(function (c) { grupos[c].sort(function (x, y) { return y.n - x.n; }); });
+    var clientes = Object.keys(grupos).sort(function (a, b) { return grupos[b][0].n - grupos[a][0].n; });
+    document.getElementById('lista-arriendos').innerHTML = clientes.map(function (c) {
+        return '<section class="panel cliente-bloque"><div class="panel-encabezado"><h2>' + esc(c) + '</h2><span class="contador"><b>' + grupos[c].length + '</b> equipo' + (grupos[c].length === 1 ? '' : 's') + '</span></div><div class="panel-cuerpo"><table><thead><tr><th>Arriendo</th><th>ID</th><th>Equipo</th><th>Período</th><th>Ubicación GPS</th><th>Señal</th></tr></thead><tbody>' +
+            grupos[c].map(function (x) {
+                var e = x.e, a = x.a, s = senal(e);
+                return '<tr class="clic' + (a && recien === a.numero ? ' recien' : '') + '" data-equipo="' + esc(e.codigo) + '"><td>' + (a ? '<span class="codigo">' + a.numero + '</span>' + (esNuevo(a) ? NUEVO : '') : '—') +
+                    '</td><td>' + celdaId(e) + '</td><td>' + celdaCodigo(e) + '<span class="codigo-ant">' + esc(e.nombre) + '</span></td><td>' + (a ? fechaCL(a.desde) + ' → ' + (a.hasta ? fechaCL(a.hasta) : 'sin fecha') : '—') +
+                    '</td><td>' + celdaUbicacion(e).replace(/<span class="codigo-ant">[^<]*<\/span>$/, '') + '<span class="codigo-ant">' + e.lat.toFixed(4) + ', ' + e.lng.toFixed(4) + '</span></td><td><span class="senal ' + s.clase + '">' + s.txt + '</span></td></tr>';
+            }).join('') + '</tbody></table></div></section>';
+    }).join('') || '<div class="panel vacio">No hay equipos arrendados que coincidan con los filtros.</div>';
+}
+
+function ordenesFiltradas() {
+    var cod = equiposFiltrados().map(function (e) { return e.codigo; });
+    return estado.ordenes.filter(function (o) {
+        return cod.indexOf(o.equipo) !== -1 && (filtroOT === 'todas' || (filtroOT === 'ABIERTAS' ? o.estado !== 'CERRADA' : o.estado === filtroOT));
+    }).sort(function (a, b) { return b.numero - a.numero; });
+}
+function pintarOrdenes() {
+    pintarBarraFiltros('ordenes');
+    document.querySelectorAll('#filtros-ot .filtro').forEach(function (b) { b.classList.toggle('activo', b.dataset.ot === filtroOT); });
+    var lista = ordenesFiltradas();
+    document.getElementById('contador-ot').innerHTML = '<b>' + lista.length + '</b> orden' + (lista.length === 1 ? '' : 'es');
+    document.getElementById('tabla-ordenes').innerHTML = lista.map(function (o) {
+        var e = equipoPorCodigo(o.equipo), u = e ? unidadCorta(tipoPorNombre(e.tipo).unidad) : '';
+        var acc = o.estado === 'PROGRAMADA' ? '<button class="btn btn-secondary btn-chico" data-ot-iniciar="' + o.numero + '">Iniciar</button>'
+                : o.estado === 'EN_EJECUCION' ? '<button class="btn btn-primary btn-chico" data-ot-cerrar="' + o.numero + '">Cerrar OT</button>' : '';
+        return '<tr class="clic' + (recien === 'OT' + o.numero ? ' recien' : '') + '" data-equipo="' + esc(o.equipo) + '"><td><span class="codigo">OT ' + o.numero + '</span>' + (esNuevo(o) ? NUEVO : '') + '</td><td>' + (e ? celdaCodigo(e) + '<span class="codigo-ant">' + idTxt(e.id) + '</span>' : esc(o.equipo)) +
+            '</td><td>Servicio ' + fmt(o.servicio) + ' ' + u + '</td><td>' + fechaCL(o.fecha) + '</td><td class="horas">' + fmt(o.horometro) + ' ' + u + '</td><td>' + badge(ESTADOS_OT, o.estado) + '</td><td>' + acc + '</td></tr>';
+    }).join('') || '<tr><td colspan="7" class="vacio">No hay órdenes en esta vista.</td></tr>';
+}
+
+function pintarTipos() {
+    var tipos = estado.tipos.slice().sort(function (a, b) { return b.id - a.id; });
+    document.getElementById('tipos-grid').innerHTML = tipos.map(function (t) {
+        var n = estado.equipos.filter(function (e) { return e.tipo === t.nombre; }).length, u = unidadCorta(t.unidad);
+        var ins = Object.keys(t.insumos || {}).map(function (k) {
+            return '<details><summary>Insumos servicio ' + fmt(k) + ' ' + u + '</summary><ul class="lista-simple">' + t.insumos[k].map(function (i) { return '<li><span>' + esc(i[0]) + '</span><b>' + esc(i[1]) + '</b></li>'; }).join('') + '</ul></details>';
+        }).join('');
+        return '<article class="tipo-card"><header><div><h3>' + esc(t.nombre) + (esNuevo(t) ? NUEVO : '') + '</h3><span class="meta">Se mide en ' + (t.unidad === 'KM' ? 'kilómetros' : 'horas') + ' · próximo código <b>' + siguienteCodigo(t.prefijo) + '</b></span></div><span class="prefijo">' + esc(t.prefijo) + '</span></header>' +
+            '<div class="chips">' + t.intervalos.map(function (i) { return '<span class="chip on">' + fmt(i) + ' ' + u + '</span>'; }).join('') + '</div>' +
+            (ins || '<p class="meta" style="margin-top:12px">Sin pauta de insumos cargada.</p>') +
+            (n ? '<button class="btn btn-secondary btn-chico ver-equipos" data-ir-a="' + ir({ vista: 'flota', set: { tipo: t.nombre }, limpiar: true }) + '">Ver ' + n + ' equipo' + (n === 1 ? '' : 's') + ' →</button>'
+               : '<p class="meta" style="margin-top:12px">Sin equipos todavía.</p>') + '</article>';
+    }).join('');
+}
+
+var PINTAR = { dashboard: pintarDashboard, flota: pintarFlota, arriendos: pintarArriendos, ordenes: pintarOrdenes, tipos: pintarTipos, admin: function () { pintarAdmin(); } };
+function repintar() { if (PINTAR[vistaActual]) PINTAR[vistaActual](); hacerEnfocables(); }
+
+/* =====================================================================
+   MAPAS (Leaflet). Si un proveedor de mapa falla, se cambia solo a otro.
+   ===================================================================== */
+var mapas = {}, capas = {}, seleccionMapa = null;
+// Mapas que no piden clave (API key). Si uno falla, se pasa solo al siguiente.
+var TESELAS = [
+    { url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', op: { maxZoom: 19, attribution: 'Mapa &copy; Esri, HERE, Garmin, OpenStreetMap' } },
+    { url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png', op: { maxZoom: 19, attribution: '&copy; colaboradores de OpenStreetMap' } }
+];
+function ponerTeselas(m) {
+    var i = 0, capa = null;
+    (function poner() {
+        if (capa) m.removeLayer(capa);
+        capa = L.tileLayer(TESELAS[i].url, TESELAS[i].op).addTo(m);
+        var errores = 0, cargo = false;
+        capa.on('tileload', function () { cargo = true; });
+        capa.on('tileerror', function () { errores++; if (!cargo && errores > 3 && i < TESELAS.length - 1) { i++; poner(); } });
+    })();
+}
+function iconoEquipo(e) {
+    return L.divIcon({ className: '', iconSize: null, iconAnchor: [8, 8],
+        html: '<div class="marcador"><span class="rombo" style="background:' + ESTADOS[e.estado].color + (e.sinSenal ? ';opacity:.45' : '') + '"></span><span class="etq">' + esc(e.codigo) + '</span></div>' });
+}
+function asegurarMapa(idDiv, clave, lista) {
+    var div = document.getElementById(idDiv);
+    if (!div || div.offsetParent === null) return;
+    if (typeof L === 'undefined') { div.innerHTML = '<div class="mapa-sin-red">No se pudo cargar el mapa: revisa tu conexión a internet.</div>'; return; }
+    if (!mapas[clave]) {
+        mapas[clave] = L.map(div, { scrollWheelZoom: clave !== 'dash' }).setView([BASE.lat, BASE.lng], 10);
+        ponerTeselas(mapas[clave]);
+        L.circleMarker([BASE.lat, BASE.lng], { radius: 7, color: '#0b0b0c', weight: 3, fillColor: '#fff', fillOpacity: 1 }).bindTooltip(BASE.nombre).addTo(mapas[clave]);
+        capas[clave] = L.layerGroup().addTo(mapas[clave]);
+    }
+    actualizarMarcadores(clave, lista);
+    setTimeout(function () {
+        var m = mapas[clave];
+        m.invalidateSize();
+        if (!m._encuadrado) { encuadrar(clave, lista); m._encuadrado = true; }
+    }, 80);
+}
+// Muestra todas las máquinas de la lista en el mapa
+function encuadrar(clave, lista) {
+    var m = mapas[clave];
+    if (!m) return;
+    var puntos = (lista || []).filter(function (e) { return isFinite(e.lat) && isFinite(e.lng); }).map(function (e) { return [e.lat, e.lng]; });
+    if (puntos.length > 1) m.fitBounds(L.latLngBounds(puntos).pad(0.2), { maxZoom: 13 });
+    else if (puntos.length === 1) m.setView(puntos[0], 14);
+    else m.setView([BASE.lat, BASE.lng], 10);
+}
+function actualizarMarcadores(clave, lista) {
+    var capa = capas[clave], m = mapas[clave];
+    if (!capa) return;
+    capa.clearLayers();
+    var puntos = [];
+    lista.forEach(function (e) {
+        var mk = L.marker([e.lat, e.lng], { icon: iconoEquipo(e), title: e.codigo });
+        mk.on('click', function () { abrirFicha(e.codigo); });
+        mk.bindTooltip(idTxt(e.id) + ' · ' + esc(e.nombre) + '<br>' + esc(e.lugar), { direction: 'top', offset: [0, -10] });
+        capa.addLayer(mk);
+        puntos.push([e.lat, e.lng]);
+    });
+    if (!m._ajustado) { encuadrar(clave, lista); m._ajustado = true; }
+}
+function verEnMapa(codigo) {
+    var e = equipoPorCodigo(codigo);
+    if (!e) return;
+    if (!pasa(e)) { Object.keys(filtro).forEach(function (k) { filtro[k] = ''; }); aviso('Se limpiaron los filtros para mostrar ' + codigo + ' en el mapa.'); }
+    modoFlota = 'mapa'; seleccionMapa = codigo;
+    mostrar('flota');
+    setTimeout(function () {
+        if (mapas.flota) { mapas.flota._ajustado = true; mapas.flota.setView([e.lat, e.lng], 15); }
+        var it = document.querySelector('.mapa-item[data-foco="' + codigo + '"]'); if (it) it.scrollIntoView({ block: 'nearest' });
+    }, 150);
+}
+
+/* =====================================================================
+   TELEMETRÍA SIMULADA (cada 3 s). Con un GPS real se reemplaza este bloque.
+   ===================================================================== */
+var RUTA = [[-20.2690, -70.0986], [-20.2805, -70.0450], [-20.2700, -69.9500], [-20.2620, -69.8700], [-20.2569, -69.7859]];
+function tickTelemetria() {
+    estado.equipos.forEach(function (e) {
+        if (e.sinSenal) return;
+        e.ultimaSenal = Date.now();
+        if (e.estado !== 'EN_FAENA') { e.velocidad = 0; return; }
+        var t = tipoPorNombre(e.tipo);
+        if (e.ruta) {
+            e.rutaPos = ((e.rutaPos || 0) + 0.012) % (RUTA.length - 1);
+            var i = Math.floor(e.rutaPos), f = e.rutaPos - i;
+            e.lat = RUTA[i][0] + (RUTA[i + 1][0] - RUTA[i][0]) * f; e.lng = RUTA[i][1] + (RUTA[i + 1][1] - RUTA[i][1]) * f;
+            e.velocidad = 62 + Math.round(Math.random() * 18); e.horometro += 0.05 * e.velocidad; e.lugar = 'Ruta 16, en tránsito';
+        } else {
+            e.lat += (Math.random() - 0.5) * 0.0003; e.lng += (Math.random() - 0.5) * 0.0003;
+            e.velocidad = Math.round(Math.random() * 8); e.horometro += t && t.unidad === 'KM' ? 0.2 : 0.05;
+        }
+    });
+    guardar();
+    enVivo();
+}
+function enVivo() {
+    var on = estado.equipos.filter(function (e) { return !e.sinSenal; }).length;
+    document.getElementById('gps-resumen').textContent = on + '/' + estado.equipos.length;
+    if (vistaActual === 'dashboard') pintarDashboard();
+    else if (vistaActual === 'flota') { if (modoFlota === 'tabla') pintarFlota(); else if (capas.flota) actualizarMarcadores('flota', equiposFiltrados()); }
+    else if (vistaActual === 'arriendos') pintarArriendos();
+    if (fichaAbierta) pintarFichaDatos(fichaAbierta);
+    hacerEnfocables();
+}
+
+/* =====================================================================
+   FICHA LATERAL DEL EQUIPO
+   ===================================================================== */
+var fichaAbierta = null, mapaFicha = null, marcadorFicha = null;
+function abrirFicha(codigo) {
+    var e = equipoPorCodigo(codigo); if (!e) return;
+    fichaAbierta = codigo;
+    document.getElementById('ficha-cabecera').innerHTML =
+        '<span class="eyebrow">' + idTxt(e.id) + ' · ' + esc(e.tipo) + (e.codigoAnterior ? ' · ant. ' + esc(e.codigoAnterior) : '') + '</span><h1>' + esc(e.codigo) + '</h1><p class="sub">' + esc(e.nombre) + '</p>' +
+        '<button class="icon-btn ficha-cerrar" data-cerrar-ficha title="Cerrar"><svg viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>';
+    document.getElementById('ficha-cuerpo').innerHTML = '<div class="ficha-mapa" id="mapa-ficha"></div><div id="ficha-datos"></div><div class="acciones" id="ficha-acciones"></div><div class="bloque" id="ficha-insumos"></div><div class="bloque"><h3>Historial de mantenciones</h3><ul class="lista-simple" id="ficha-historial"></ul></div><div class="bloque" id="ficha-cambios"></div>';
+    document.getElementById('ficha').classList.add('abierta');
+    document.getElementById('ficha').setAttribute('aria-hidden', 'false');
+    document.getElementById('fondo').classList.add('abierto');
+    pintarFichaDatos(codigo);
+    if (typeof L !== 'undefined') {
+        setTimeout(function () {
+            if (mapaFicha) mapaFicha.remove();
+            mapaFicha = L.map('mapa-ficha', { zoomControl: false, attributionControl: false }).setView([e.lat, e.lng], 14);
+            ponerTeselas(mapaFicha);
+            marcadorFicha = L.marker([e.lat, e.lng], { icon: iconoEquipo(e) }).addTo(mapaFicha);
+        }, 260);
+    } else document.getElementById('mapa-ficha').innerHTML = '<div class="mapa-sin-red">Mapa no disponible sin internet.</div>';
+}
+function dato(k, v) { return '<div><dt>' + k + '</dt><dd>' + v + '</dd></div>'; }
+function pintarFichaDatos(codigo) {
+    var e = equipoPorCodigo(codigo);
+    if (!e || !document.getElementById('ficha-datos')) return;
+    var t = tipoPorNombre(e.tipo), p = proximoServicio(e), s = senal(e), u = unidadCorta(t.unidad), a = arriendoVigente(codigo);
+    var tonos = { VENCIDO: 'var(--rojo)', POR_VENCER: 'var(--ambar)', AL_DIA: 'var(--ok)', SIN_PLAN: 'var(--neutro)' };
+    document.getElementById('ficha-datos').innerHTML =
+        '<div class="proximo" style="--tono:' + tonos[p.estado] + '"><div><span class="paso-txt">Próximo servicio</span><b>' + (p.servicio ? fmt(p.servicio) + ' ' + (t.unidad === 'KM' ? 'KM' : 'HORAS') : 'Sin plan') + '</b><br>' + (p.servicio ? celdaRestante(p) : '') + '</div>' + badge(MANT, p.estado) + '</div>' +
+        '<dl class="datos">' + dato('ID', idTxt(e.id)) + dato('Estado', badge(ESTADOS, e.estado)) +
+        dato('Señal GPS', '<span class="senal ' + s.clase + '">' + s.txt + '</span>') + dato('ID telemetría', esc(e.telemetria)) +
+        dato(t.unidad === 'KM' ? 'Odómetro' : 'Horómetro', fmt(e.horometro, t.unidad === 'KM' ? 0 : 1) + ' ' + u) + dato('Velocidad', e.sinSenal ? '—' : e.velocidad + ' km/h') +
+        dato('Ubicación', celdaUbicacion(e).replace(/<span class="codigo-ant">[^<]*<\/span>$/, '')) + dato('Coordenadas', e.lat.toFixed(5) + ', ' + e.lng.toFixed(5)) +
+        dato('Cliente', esc(e.cliente) || '—') + dato('Arriendo', a ? a.numero + ' · hasta ' + (a.hasta ? fechaCL(a.hasta) : 'sin fecha') : '—') +
+        dato('Patente', esc(e.patente) || '—') + dato('Último servicio', fmt(e.ultimoServicio) + ' ' + u) + '</dl>';
+    var abierta = otAbierta(codigo), acc = document.getElementById('ficha-acciones');
+    var firma = [abierta ? abierta.numero : '', e.estado, a ? a.numero : '', e.sinSenal].join('|');
+    if (acc.dataset.firma !== firma) {
+        acc.innerHTML =
+            (abierta ? '<button class="btn btn-secondary" data-ir-a="' + ir({ vista: 'ordenes', ot: 'ABIERTAS' }) + '">Ver OT ' + abierta.numero + '</button>'
+                     : (p.servicio ? '<button class="btn btn-primary" data-crear-ot="' + esc(codigo) + '">Crear OT ' + fmt(p.servicio) + ' ' + u + '</button>' : '')) +
+            (e.estado === 'DISPONIBLE' ? '<button class="btn btn-primary" data-arrendar="' + esc(codigo) + '">Arrendar</button>' : '') +
+            (a ? '<button class="btn btn-secondary" data-terminar-arriendo="' + esc(codigo) + '">Terminar arriendo</button>' : '') +
+            '<select data-cambiar-estado="' + esc(codigo) + '" aria-label="Cambiar estado">' + Object.keys(ESTADOS).map(function (k) { return '<option value="' + k + '"' + (k === e.estado ? ' selected' : '') + '>' + ESTADOS[k].txt + '</option>'; }).join('') + '</select>' +
+            '<button class="btn btn-secondary" data-ver-mapa="' + esc(codigo) + '">Ver en mapa</button>' +
+            (e.sinSenal ? '<button class="btn btn-secondary" data-reconectar="' + esc(codigo) + '">Simular señal</button>' : '');
+        acc.dataset.firma = firma;
+    }
+    document.getElementById('ficha-insumos').innerHTML = p.insumos && p.insumos.length
+        ? '<h3>Insumos para el servicio ' + fmt(p.servicio) + ' ' + u + '</h3><ul class="lista-simple">' + p.insumos.map(function (i) { return '<li><span>' + esc(i[0]) + '</span><b>' + esc(i[1]) + '</b></li>'; }).join('') + '</ul>' : '';
+    var hist = estado.ordenes.filter(function (o) { return o.equipo === codigo; }).sort(function (x, y) { return y.numero - x.numero; });
+    document.getElementById('ficha-historial').innerHTML = hist.map(function (o) {
+        return '<li><span>OT ' + o.numero + ' · ' + fechaCL(o.fecha) + ' · Servicio ' + fmt(o.servicio) + ' ' + u + '</span><b>' + fmt(o.horometro) + ' ' + u + '</b></li>';
+    }).join('') || '<li><span style="color:var(--muted)">Sin mantenciones registradas.</span></li>';
+    var cambios = cambiosDeEquipo(codigo).slice(0, 5), caja = document.getElementById('ficha-cambios');
+    var firmaC = cambios.length + '|' + (cambios[0] ? cambios[0].id : '');
+    if (caja.dataset.firma !== firmaC) {
+        caja.innerHTML = '<h3>Cambios recientes</h3><ul class="lista-simple cambios">' + (cambios.map(function (a) {
+            return '<li><span>' + esc(a.detalle) + '<small>' + fechaHora(a.fecha) + ' · ' + esc(nombreDe(a.usuario)) + '</small></span>' + badge(ACCIONES, a.accion) + '</li>';
+        }).join('') || '<li><span style="color:var(--muted)">Sin cambios registrados.</span></li>') + '</ul>' +
+        (puedeVer('admin') && cambios.length ? '<button class="btn btn-secondary btn-chico" style="margin-top:10px" data-ver-auditoria="' + esc(codigo) + '">Ver todo en auditoría →</button>' : '');
+        caja.dataset.firma = firmaC;
+    }
+    if (marcadorFicha) { marcadorFicha.setLatLng([e.lat, e.lng]); marcadorFicha.setIcon(iconoEquipo(e)); }
+}
+function cerrarFicha() {
+    fichaAbierta = null;
+    document.getElementById('ficha').classList.remove('abierta');
+    document.getElementById('ficha').setAttribute('aria-hidden', 'true');
+    if (!formActual) document.getElementById('fondo').classList.remove('abierto');
+}
+
+/* =====================================================================
+   FORMULARIOS (un solo modal para equipo, tipo y arriendo)
+   ===================================================================== */
+function val(id) { var el = document.getElementById(id); return el ? el.value.trim() : ''; }
+function requerido(c, i) { var ok = !!val(i); document.getElementById(c).classList.toggle('error', !ok); return ok; }
+
+var FORMULARIOS = {
+    equipo: {
+        eyebrow: 'Flota', titulo: 'Nuevo equipo',
+        campos: function () {
+            return '<div class="campo"><label for="f-tipo">Tipo de equipo</label><select id="f-tipo">' + estado.tipos.slice().sort(function (a, b) { return a.nombre.localeCompare(b.nombre, 'es'); }).map(function (t) { return '<option>' + esc(t.nombre) + '</option>'; }).join('') +
+                '</select><span class="ayuda">¿No está? <a href="#" data-crear="tipo">Crear un tipo nuevo</a></span></div>' +
+                '<div class="form-fila"><div class="campo" id="c-marca"><label for="f-marca">Marca</label><input id="f-marca" placeholder="Ej: JCB" list="marcas"><span class="msg-error">Indica la marca.</span></div>' +
+                '<div class="campo" id="c-modelo"><label for="f-modelo">Modelo</label><input id="f-modelo" placeholder="Ej: G45QX" list="modelos"><span class="msg-error">Indica el modelo.</span></div></div>' +
+                '<div class="form-fila"><div class="campo"><label for="f-detalle">Detalle (opcional)</label><input id="f-detalle" placeholder="Ej: 3.5 ton"></div>' +
+                '<div class="campo" id="c-patente"><label for="f-patente">Patente (opcional)</label><input id="f-patente" placeholder="Ej: SVTJ39" maxlength="8"><span class="msg-error">Esa patente ya existe.</span></div></div>' +
+                '<div class="form-fila"><div class="campo"><label for="f-anterior">Código anterior (opcional)</label><input id="f-anterior" placeholder="Ej: V168"><span class="ayuda">El que usa hoy la empresa.</span></div>' +
+                '<div class="campo"><label for="f-horometro" id="l-horometro">Horómetro inicial</label><input id="f-horometro" type="number" min="0" step="0.1" value="0"></div></div>' +
+                '<datalist id="marcas">' + Array.from(new Set(estado.equipos.map(function (e) { return e.marca; }))).map(function (m) { return '<option value="' + esc(m) + '">'; }).join('') + '</datalist>' +
+                '<datalist id="modelos">' + Array.from(new Set(estado.equipos.map(function (e) { return e.modelo; }))).map(function (m) { return '<option value="' + esc(m) + '">'; }).join('') + '</datalist>' +
+                '<dl class="auto" id="auto"></dl>';
+        },
+        actualizar: function () {
+            var t = tipoPorNombre(val('f-tipo')), id = siguienteId();
+            document.getElementById('l-horometro').textContent = t.unidad === 'KM' ? 'Odómetro inicial (km)' : 'Horómetro inicial (h)';
+            document.getElementById('auto').innerHTML =
+                '<div><dt>ID</dt><dd>' + idTxt(id) + '</dd></div><div><dt>Código</dt><dd>' + siguienteCodigo(t.prefijo) + '</dd></div><div><dt>Telemetría</dt><dd class="normal">' + telemetriaDe(id) + '</dd></div>' +
+                '<div style="grid-column:1/-1"><dt>Nombre</dt><dd class="normal">' + esc(nombreEquipo(t.nombre, val('f-marca'), val('f-modelo'), val('f-detalle'))) + '</dd></div>';
+        },
+        guardar: function () {
+            var ok = requerido('c-marca', 'f-marca') & requerido('c-modelo', 'f-modelo');
+            var patente = val('f-patente').toUpperCase().replace(/[^A-Z0-9]/g, '');
+            var rep = patente && estado.equipos.some(function (e) { return e.patente === patente; });
+            document.getElementById('c-patente').classList.toggle('error', !!rep);
+            if (!ok || rep) return false;
+            var t = tipoPorNombre(val('f-tipo')), id = siguienteId(), codigo = siguienteCodigo(t.prefijo), h = parseFloat(val('f-horometro')) || 0, base = Math.min.apply(null, t.intervalos);
+            var e = { id: id, codigo: codigo, codigoAnterior: val('f-anterior').toUpperCase(), tipo: t.nombre, nombre: nombreEquipo(t.nombre, val('f-marca'), val('f-modelo'), val('f-detalle')),
+                      marca: val('f-marca'), modelo: val('f-modelo'), detalle: val('f-detalle'), patente: patente, estado: 'DISPONIBLE', horometro: h, ultimoServicio: Math.floor(h / base) * base,
+                      cliente: '', lugar: 'Taller', telemetria: telemetriaDe(id), lat: BASE.lat + (Math.random() - 0.5) * 0.001, lng: BASE.lng + (Math.random() - 0.5) * 0.001,
+                      sinSenal: false, ruta: false, ultimaSenal: Date.now(), velocidad: 0, creado: Date.now() };
+            estado.equipos.push(e);
+            registrar('CREAR', 'Equipo', codigo, idTxt(id) + ' · ' + e.nombre + (e.codigoAnterior ? ' (ant. ' + e.codigoAnterior + ')' : ''));
+            recien = codigo;
+            if (!pasa(e)) { Object.keys(filtro).forEach(function (k) { filtro[k] = ''; }); }
+            aviso(idTxt(id) + ' · ' + codigo + ' creado. Aparece primero en la lista.');
+            return true;
+        }
+    },
+    tipo: {
+        eyebrow: 'Catálogo', titulo: 'Nuevo tipo de equipo', unidadManual: false,
+        campos: function () {
+            return '<div class="campo" id="c-nombre"><label for="f-nombre">Nombre del tipo</label><input id="f-nombre" placeholder="Ej: Torre de iluminación"><span class="msg-error" id="e-nombre">Indica el nombre.</span></div>' +
+                '<div class="campo"><label>Se mide en</label><div class="chips" id="f-unidad"><span class="chip" data-v="HORAS">Horas</span><span class="chip" data-v="KM">Kilómetros</span></div><span class="ayuda">Se sugiere según el nombre; puedes cambiarlo.</span></div>' +
+                '<div class="campo"><label>Servicios de la pauta</label><div class="chips" id="f-intervalos"></div></div><dl class="auto" id="auto"></dl>';
+        },
+        actualizar: function (origen) {
+            var nombre = val('f-nombre');
+            if (!FORMULARIOS.tipo.unidadManual && origen !== 'unidad') {
+                var sug = sugerirUnidad(nombre);
+                document.querySelectorAll('#f-unidad .chip').forEach(function (c) { c.classList.toggle('on', c.dataset.v === sug); });
+            }
+            var u = document.querySelector('#f-unidad .chip.on').dataset.v, cont = document.getElementById('f-intervalos');
+            if (cont.dataset.u !== u) {
+                var ops = u === 'KM' ? [5000, 10000, 20000, 40000] : [250, 500, 1000, 2000], def = u === 'KM' ? [10000, 20000] : [250, 500, 1000];
+                cont.innerHTML = ops.map(function (o) { return '<span class="chip' + (def.indexOf(o) !== -1 ? ' on' : '') + '" data-v="' + o + '">' + fmt(o) + ' ' + unidadCorta(u) + '</span>'; }).join('');
+                cont.dataset.u = u;
+            }
+            var pref = nombre ? generarPrefijo(nombre, estado.tipos.map(function (t) { return t.prefijo; })) : '—';
+            document.getElementById('auto').innerHTML = '<div><dt>Prefijo</dt><dd>' + esc(pref) + '</dd></div><div><dt>1er equipo</dt><dd>' + (nombre ? esc(pref) + '-001' : '—') + '</dd></div><div><dt>Unidad</dt><dd class="normal">' + (u === 'KM' ? 'Kilómetros' : 'Horas') + '</dd></div>';
+        },
+        guardar: function () {
+            var nombre = val('f-nombre').replace(/\s+/g, ' ');
+            var existe = estado.tipos.some(function (t) { return sinTildes(t.nombre.toLowerCase()) === sinTildes(nombre.toLowerCase()); });
+            document.getElementById('e-nombre').textContent = existe ? 'Ese tipo ya existe.' : 'Indica el nombre.';
+            document.getElementById('c-nombre').classList.toggle('error', !nombre || existe);
+            var intervalos = Array.from(document.querySelectorAll('#f-intervalos .chip.on')).map(function (c) { return +c.dataset.v; });
+            if (!nombre || existe) return false;
+            if (!intervalos.length) { aviso('Elige al menos un servicio para la pauta.'); return false; }
+            nombre = nombre.charAt(0).toUpperCase() + nombre.slice(1);
+            var pref = generarPrefijo(nombre, estado.tipos.map(function (t) { return t.prefijo; }));
+            estado.tipos.push({ id: maxDe(estado.tipos, 'id') + 1, nombre: nombre, prefijo: pref, unidad: document.querySelector('#f-unidad .chip.on').dataset.v, intervalos: intervalos.sort(function (a, b) { return a - b; }), insumos: {}, creado: Date.now() });
+            registrar('CREAR', 'Tipo de equipo', pref, nombre + ' · servicios ' + intervalos.join(', '));
+            aviso('Tipo "' + nombre + '" creado con prefijo ' + pref + '.');
+            return true;
+        }
+    },
+    arriendo: {
+        eyebrow: 'Arriendos', titulo: 'Nuevo arriendo', boton: 'Arrendar',
+        campos: function () {
+            var disp = estado.equipos.filter(function (e) { return e.estado === 'DISPONIBLE'; }).sort(function (a, b) { return b.id - a.id; });
+            var clientes = Array.from(new Set(estado.arriendos.map(function (a) { return a.cliente; }))).sort();
+            return '<div class="campo" id="c-equipo"><label for="f-equipo">Equipo disponible</label><select id="f-equipo">' + disp.map(function (e) { return '<option value="' + esc(e.codigo) + '">' + idTxt(e.id) + ' · ' + esc(e.codigo) + ' · ' + esc(e.nombre) + '</option>'; }).join('') +
+                '</select><span class="msg-error">No hay equipos disponibles.</span><span class="ayuda">¿Es una máquina nueva? <a href="#" data-crear="equipo">Agregar maquinaria</a></span></div>' +
+                '<div class="campo" id="c-cliente"><label for="f-cliente">Cliente</label><input id="f-cliente" list="lista-clientes" placeholder="Razón social"><span class="msg-error">Indica el cliente.</span></div>' +
+                '<datalist id="lista-clientes">' + clientes.map(function (c) { return '<option value="' + esc(c) + '">'; }).join('') + '</datalist>' +
+                '<div class="campo"><label for="f-faena">Faena / ubicación</label><select id="f-faena">' + FAENAS.map(function (f, i) { return '<option value="' + i + '">' + esc(f.nombre) + '</option>'; }).join('') + '</select><span class="ayuda">Desde ahí el GPS reporta la posición real.</span></div>' +
+                '<div class="form-fila"><div class="campo" id="c-desde"><label for="f-desde">Desde</label><input id="f-desde" type="date" value="' + hoyISO() + '"><span class="msg-error">Indica la fecha de inicio.</span></div>' +
+                '<div class="campo" id="c-hasta"><label for="f-hasta">Hasta (opcional)</label><input id="f-hasta" type="date"><span class="msg-error">Debe ser posterior al inicio.</span></div></div><dl class="auto" id="auto"></dl>';
+        },
+        actualizar: function () {
+            var e = equipoPorCodigo(val('f-equipo'));
+            var dias = val('f-desde') && val('f-hasta') ? Math.round((new Date(val('f-hasta')) - new Date(val('f-desde'))) / 86400000) + 1 : null;
+            document.getElementById('auto').innerHTML = '<div><dt>N° arriendo</dt><dd>' + siguienteArriendo() + '</dd></div><div><dt>Equipo</dt><dd class="normal">' + (e ? idTxt(e.id) + ' · ' + esc(e.nombre) : '—') + '</dd></div><div><dt>Duración</dt><dd class="normal">' + (dias > 0 ? dias + ' día' + (dias === 1 ? '' : 's') : 'Sin fecha de término') + '</dd></div>';
+        },
+        guardar: function () {
+            var e = equipoPorCodigo(val('f-equipo'));
+            document.getElementById('c-equipo').classList.toggle('error', !e);
+            var ok = !!e & requerido('c-cliente', 'f-cliente') & requerido('c-desde', 'f-desde');
+            var mal = val('f-hasta') && val('f-hasta') < val('f-desde');
+            document.getElementById('c-hasta').classList.toggle('error', !!mal);
+            if (!ok || mal) return false;
+            var f = FAENAS[+val('f-faena')], num = siguienteArriendo();
+            estado.arriendos.push({ numero: num, equipo: e.codigo, cliente: val('f-cliente'), lugar: f.nombre, desde: val('f-desde'), hasta: val('f-hasta'), estado: 'VIGENTE', creado: Date.now() });
+            e.estado = 'EN_FAENA'; e.cliente = val('f-cliente'); e.lugar = f.nombre; e.ruta = false;
+            e.lat = f.lat + (Math.random() - 0.5) * 0.002; e.lng = f.lng + (Math.random() - 0.5) * 0.002;
+            registrar('CREAR', 'Arriendo', num, e.codigo + ' a ' + e.cliente + ' en ' + f.nombre + (val('f-hasta') ? ' hasta ' + fechaCL(val('f-hasta')) : ''));
+            recien = num;
+            if (!pasa(e, ['estado', 'cliente'])) Object.keys(filtro).forEach(function (k) { filtro[k] = ''; });
+            if (filtro.estado && filtro.estado !== 'EN_FAENA') filtro.estado = '';
+            if (filtro.cliente && filtro.cliente !== e.cliente) filtro.cliente = '';
+            aviso(num + ': ' + e.codigo + ' arrendado a ' + e.cliente + '.');
+            return true;
+        }
+    }
+};
+
+var formActual = null, pilaModal = [], focoPrevio = null;
+function abrirModal(clave, preset) {
+    if (formActual && formActual !== clave) pilaModal.push(formActual);   // ej: arriendo -> equipo -> vuelve al arriendo
+    formActual = clave;
+    FORMULARIOS.tipo.unidadManual = false;
+    var f = FORMULARIOS[clave];
+    document.getElementById('modal-eyebrow').textContent = f.eyebrow;
+    document.getElementById('modal-titulo').textContent = f.titulo;
+    if (!formActual || !document.getElementById('modal').classList.contains('abierto')) focoPrevio = document.activeElement;
+    document.getElementById('modal-cuerpo').innerHTML = f.campos() + '<div class="modal-pie">' + (f.sinCancelar ? '' : '<button class="btn btn-secondary" data-cerrar-modal>Cancelar</button>') + '<button class="btn btn-primary" id="btn-guardar">' + (f.boton || 'Crear') + '</button></div>';
+    document.getElementById('modal').classList.add('abierto');
+    document.getElementById('fondo').classList.add('abierto');
+    if (preset) Object.keys(preset).forEach(function (id) { var el = document.getElementById(id); if (el) el.value = preset[id]; });
+    f.actualizar();
+    var primero = document.querySelector('#modal-cuerpo input, #modal-cuerpo select'); if (primero) primero.focus();
+}
+function cerrarModal(volver) {
+    document.getElementById('modal').classList.remove('abierto');
+    formActual = null;
+    var previo = pilaModal.pop();
+    if (volver !== false && previo) { abrirModal(previo); return previo; }
+    pilaModal = [];
+    if (!fichaAbierta) document.getElementById('fondo').classList.remove('abierto');
+    if (focoPrevio && document.body.contains(focoPrevio)) { try { focoPrevio.focus(); } catch (e) {} }
+    focoPrevio = null;
+    return null;
+}
+
+function terminarArriendo(codigo) {
+    var e = equipoPorCodigo(codigo), a = arriendoVigente(codigo);
+    if (!e || !a || !confirm('¿Terminar el arriendo ' + a.numero + ' de ' + e.codigo + '? El equipo vuelve al taller como disponible.')) return;
+    a.estado = 'TERMINADO'; a.hasta = hoyISO();
+    e.estado = 'DISPONIBLE'; e.cliente = ''; e.lugar = 'Taller'; e.ruta = false;
+    e.lat = BASE.lat + (Math.random() - 0.5) * 0.001; e.lng = BASE.lng + (Math.random() - 0.5) * 0.001;
+    registrar('ACTUALIZAR', 'Arriendo', a.numero, 'Terminado. ' + e.codigo + ' vuelve al taller como disponible');
+    aviso('Arriendo ' + a.numero + ' terminado. ' + e.codigo + ' quedó disponible.');
+    enVivo(); repintar();
+}
+
+/* =====================================================================
+   NAVEGACIÓN
+   ===================================================================== */
+function mostrar(vista) {
+    if (vista === 'login') {
+        if (sesionActiva() && usuarioActual()) registrar('ACCESO', 'Sesión', usuarioActual().email, 'Cierre de sesión');
+        cerrarSesion();
+    } else if (!sesionActiva() || !usuarioActual() || !usuarioActual().activo) { cerrarSesion(); vista = 'login'; }
+    else if (!puedeVer(vista)) { aviso('Tu rol no tiene acceso a esa sección.'); vista = 'dashboard'; }
+    aplicarRol();
+    vistaActual = vista;
+    document.querySelectorAll('.vista').forEach(function (v) { v.classList.remove('visible'); });
+    document.getElementById('vista-' + vista).classList.add('visible');
+    document.body.classList.toggle('solo-login', vista === 'login');
+    document.querySelectorAll('#nav a').forEach(function (a) {
+        a.classList.toggle('activo', a.dataset.ir === vista);
+        if (a.dataset.ir === vista) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
+    });
+    pilaModal = []; cerrarFicha(); if (formActual) cerrarModal(false);
+    repintar();
+    if (vista === 'login') irPaso(1);
+    window.scrollTo(0, 0);
+}
+// Lleva a la lista exacta que forma un número: aplica el filtro y abre la pantalla
+function irA(dest) {
+    if (dest.limpiar) Object.keys(filtro).forEach(function (k) { filtro[k] = ''; });
+    Object.keys(dest.set || {}).forEach(function (k) { filtro[k] = dest.set[k]; });
+    if (dest.ot) filtroOT = dest.ot;
+    if (dest.vista === 'flota') modoFlota = 'tabla';
+    Object.keys(mapas).forEach(function (m) { mapas[m]._ajustado = false; });
+    mostrar(dest.vista);
+}
+function aviso(t) {
+    var el = document.getElementById('toast');
+    el.textContent = t; el.classList.add('visible');
+    clearTimeout(aviso._t); aviso._t = setTimeout(function () { el.classList.remove('visible'); }, 3400);
+}
+
+/* =====================================================================
+   EVENTOS
+   ===================================================================== */
+document.addEventListener('click', function (ev) {
+    var ex = ev.target.closest('[data-encuadrar],[data-ayuda],[data-tab],[data-usuario],[data-ver-auditoria],[data-copiar],[data-reset-clave],#f-modoclave .chip,#exportar-csv,#saltar');
+    if (ex && manejarExtra(ex, ev)) return;
+    var el = ev.target.closest('[data-toggle-filtros],[data-quitar-fd],[data-ir-a],[data-arrendar],[data-terminar-arriendo],[data-ot-cerrar],[data-ot-iniciar],[data-crear-ot],[data-ver-mapa],[data-reconectar],[data-foco],[data-ir],[data-crear],[data-cerrar-ficha],[data-cerrar-modal],#btn-guardar,#f-unidad .chip,#f-intervalos .chip,#chips-mant .filtro,#filtros-ot .filtro,#modo-flota .filtro,[data-equipo]');
+    if (!el) return;
+    if (el.matches('[data-quitar-fd]')) { cambiarFiltro(el.dataset.quitarFd, ''); return; }
+    if (el.matches('[data-toggle-filtros]')) { var bf = el.closest('.barra-filtros'); bf.classList.toggle('abierta'); el.textContent = bf.classList.contains('abierta') ? 'Ocultar filtros' : 'Filtrar'; return; }
+    if (el.matches('[data-ir-a]')) { ev.preventDefault(); irA(JSON.parse(el.dataset.irA)); return; }
+    if (el.matches('[data-arrendar]')) { cerrarFicha(); abrirModal('arriendo', { 'f-equipo': el.dataset.arrendar }); document.getElementById('f-cliente').focus(); return; }
+    if (el.matches('[data-terminar-arriendo]')) { terminarArriendo(el.dataset.terminarArriendo); return; }
+    if (el.matches('[data-ot-iniciar]')) {
+        var o = estado.ordenes.filter(function (x) { return x.numero === +el.dataset.otIniciar; })[0], eq = equipoPorCodigo(o.equipo);
+        o.estado = 'EN_EJECUCION';
+        if (eq.estado !== 'EN_MANTENIMIENTO') { eq.estadoPrevio = eq.estado; eq.estado = 'EN_MANTENIMIENTO'; }
+        registrar('ACTUALIZAR', 'Orden de trabajo', 'OT ' + o.numero, 'Programada → En ejecución · ' + eq.codigo + ' pasa a mantención');
+        repintar(); aviso('OT ' + o.numero + ' en ejecución. ' + eq.codigo + ' pasó a mantención.'); return;
+    }
+    if (el.matches('[data-ot-cerrar]')) {
+        var oc = estado.ordenes.filter(function (x) { return x.numero === +el.dataset.otCerrar; })[0], ec = equipoPorCodigo(oc.equipo);
+        oc.estado = 'CERRADA'; oc.horometro = Math.round(ec.horometro); oc.fecha = hoyISO(); ec.ultimoServicio = Math.round(ec.horometro);
+        if (ec.estado === 'EN_MANTENIMIENTO') ec.estado = ec.estadoPrevio || 'DISPONIBLE';
+        registrar('ACTUALIZAR', 'Orden de trabajo', 'OT ' + oc.numero, 'Cerrada a las ' + fmt(oc.horometro) + ' · ' + ec.codigo + ' recalcula su próximo servicio');
+        repintar(); aviso('OT ' + oc.numero + ' cerrada. El próximo servicio de ' + ec.codigo + ' se recalculó.'); return;
+    }
+    if (el.matches('[data-crear-ot]')) {
+        var e = equipoPorCodigo(el.dataset.crearOt), p = proximoServicio(e), num = siguienteOT();
+        estado.ordenes.push({ numero: num, equipo: e.codigo, fecha: hoyISO(), servicio: p.servicio, horometro: Math.round(e.horometro), estado: 'PROGRAMADA', creado: Date.now() });
+        registrar('CREAR', 'Orden de trabajo', 'OT ' + num, e.codigo + ' · servicio ' + fmt(p.servicio) + ' ' + unidadCorta(p.unidad));
+        recien = 'OT' + num; pintarFichaDatos(e.codigo); repintar();
+        aviso('OT ' + num + ' creada para ' + e.codigo + ' (servicio ' + fmt(p.servicio) + ').'); return;
+    }
+    if (el.matches('[data-ver-mapa]')) { verEnMapa(el.dataset.verMapa); return; }
+    if (el.matches('[data-reconectar]')) {
+        var r = equipoPorCodigo(el.dataset.reconectar); r.sinSenal = false; r.ultimaSenal = Date.now(); guardar();
+        aviso(r.codigo + ' volvió a reportar su posición.'); enVivo(); return;
+    }
+    if (el.matches('[data-foco]')) {
+        seleccionMapa = el.dataset.foco; var ef = equipoPorCodigo(seleccionMapa);
+        document.querySelectorAll('.mapa-item').forEach(function (i) { i.classList.toggle('sel', i.dataset.foco === seleccionMapa); });
+        if (mapas.flota && ef) mapas.flota.setView([ef.lat, ef.lng], 15);
+        return;
+    }
+    if (el.matches('[data-ir]')) { ev.preventDefault(); if (el.dataset.modo) modoFlota = el.dataset.modo; mostrar(el.dataset.ir); return; }
+    if (el.matches('[data-crear]')) {
+        ev.preventDefault();
+        if (el.disabled) return;
+        if (!puedeCrear(el.dataset.crear)) { aviso('Tu rol no permite crear esto.'); return; }
+        abrirModal(el.dataset.crear); return;
+    }
+    if (el.matches('[data-cerrar-ficha]')) { cerrarFicha(); return; }
+    if (el.matches('[data-cerrar-modal]')) { cerrarModal(); return; }
+    if (el.id === 'btn-guardar') {
+        var clave = formActual, creado = FORMULARIOS[clave].guardar();
+        if (!creado) return;
+        var nuevoEq = clave === 'equipo' ? estado.equipos[estado.equipos.length - 1].codigo : null;
+        var nuevoTipo = clave === 'tipo' ? estado.tipos[estado.tipos.length - 1].nombre : null;
+        var previo = cerrarModal();
+        if (previo === 'arriendo' && nuevoEq) { document.getElementById('f-equipo').value = nuevoEq; FORMULARIOS.arriendo.actualizar(); }
+        if (previo === 'equipo' && nuevoTipo) { document.getElementById('f-tipo').value = nuevoTipo; FORMULARIOS.equipo.actualizar(); }
+        if (!previo && clave === 'equipo' && vistaActual === 'dashboard') { modoFlota = 'tabla'; mostrar('flota'); }
+        if (!previo && credencialPendiente) abrirModal('credenciales');
+        repintar();
+        setTimeout(function () { recien = null; }, 2600);
+        return;
+    }
+    if (el.matches('#f-unidad .chip')) {
+        document.querySelectorAll('#f-unidad .chip').forEach(function (c) { c.classList.toggle('on', c === el); });
+        FORMULARIOS.tipo.unidadManual = true; FORMULARIOS.tipo.actualizar('unidad'); return;
+    }
+    if (el.matches('#f-intervalos .chip')) { el.classList.toggle('on'); return; }
+    if (el.matches('#chips-mant .filtro')) { cambiarFiltro('mant', el.dataset.mant); return; }
+    if (el.matches('#filtros-ot .filtro')) { filtroOT = el.dataset.ot; pintarOrdenes(); return; }
+    if (el.matches('#modo-flota .filtro')) { modoFlota = el.dataset.modo; pintarFlota(); return; }
+    if (el.matches('[data-equipo]')) { abrirFicha(el.dataset.equipo); return; }
+});
+document.addEventListener('keydown', function (ev) {
+    var t = ev.target;
+    if ((ev.key === 'Enter' || ev.key === ' ') && t.matches && t.matches('tr.clic, .mapa-item, [data-usuario], .chip[tabindex]')) { ev.preventDefault(); t.click(); return; }
+    if (ev.key === '/' && !/INPUT|SELECT|TEXTAREA/.test(t.tagName) && !formActual) {
+        var q = document.querySelector('.vista.visible input[data-fd="q"], .vista.visible input[data-fa="q"]');
+        if (q) { ev.preventDefault(); var bf = q.closest('.barra-filtros'); if (bf) bf.classList.add('abierta'); q.focus(); }
+        return;
+    }
+    if (ev.key === 'Escape') { if (formActual) cerrarModal(false); else cerrarFicha(); }
+    if (ev.key === 'Enter' && formActual && ev.target.tagName === 'INPUT') { ev.preventDefault(); document.getElementById('btn-guardar').click(); }
+    if ((ev.key === 'Enter' || ev.key === ' ') && ev.target.matches('.stat-card[data-ir-a]')) { ev.preventDefault(); irA(JSON.parse(ev.target.dataset.irA)); }
+});
+document.addEventListener('change', function (ev) {
+    var el = ev.target;
+    if (el.matches('select[data-fd]')) { cambiarFiltro(el.dataset.fd, el.value); el.blur(); return; }
+    if (el.matches('select[data-fa]')) { filtroAud[el.dataset.fa] = el.value; pintarAuditoria(); return; }
+    if (el.matches('[data-cambiar-estado]')) {
+        var e = equipoPorCodigo(el.dataset.cambiarEstado), a = arriendoVigente(e.codigo);
+        if (el.value === 'EN_FAENA' && e.estado !== 'EN_FAENA') {
+            el.value = e.estado;
+            if (e.estado !== 'DISPONIBLE') { aviso('Solo un equipo disponible se puede arrendar.'); return; }
+            cerrarFicha(); abrirModal('arriendo', { 'f-equipo': e.codigo }); return;
+        }
+        if (a && el.value !== 'EN_FAENA') { el.value = e.estado; aviso('Primero termina el arriendo ' + a.numero + ' con el botón "Terminar arriendo".'); return; }
+        if (el.value === 'EN_MANTENIMIENTO' && e.estado !== 'EN_MANTENIMIENTO') e.estadoPrevio = e.estado;
+        var antes = e.estado;
+        e.estado = el.value;
+        registrar('ACTUALIZAR', 'Equipo', e.codigo, 'Estado: ' + ESTADOS[antes].txt + ' → ' + ESTADOS[e.estado].txt);
+        if (e.estado !== 'EN_FAENA') { e.ruta = false; if (e.estado !== 'INTERNO') e.lugar = 'Taller'; }
+        guardar(); aviso(e.codigo + ' ahora está ' + ESTADOS[e.estado].txt.toLowerCase() + '.'); enVivo(); repintar(); return;
+    }
+    if (formActual) FORMULARIOS[formActual].actualizar();
+});
+document.addEventListener('input', function (ev) {
+    if (ev.target.matches('input[data-fd="q"]')) { cambiarFiltro('q', ev.target.value.trim()); return; }
+    if (ev.target.matches('input[data-fa="q"]')) { filtroAud.q = ev.target.value.trim(); pintarAuditoria(); return; }
+    if (!formActual || ev.target.closest('#codigo-2fa')) return;
+    var c = ev.target.closest('.campo'); if (c) c.classList.remove('error');
+    FORMULARIOS[formActual].actualizar();
+});
+document.getElementById('fondo').addEventListener('click', function () { if (formActual) cerrarModal(false); else cerrarFicha(); });
+document.getElementById('btn-reset').addEventListener('click', function () {
+    if (!confirm('¿Volver a los datos de ejemplo? Se borra lo que creaste en esta maqueta.')) return;
+    try { localStorage.removeItem(CLAVE); } catch (e) {}
+    var quien = usuarioActual() ? usuarioActual().email : 'sistema';
+    estado = construirDesdeDatos();
+    registrar('SISTEMA', 'Datos', '—', 'Datos de ejemplo restablecidos', quien);
+    Object.keys(filtro).forEach(function (k) { filtro[k] = ''; });
+    Object.keys(mapas).forEach(function (k) { mapas[k]._ajustado = false; });
+    mostrar(vistaActual); aviso('Datos de ejemplo restablecidos.');
+});
+
+/* =====================================================================
+   INICIO DE SESIÓN EN DOS PASOS (código simulado; en la app real lo envía el servidor)
+   ===================================================================== */
+var SESION = 'vilasmotor-sesion', CONFIABLE = 'vilasmotor-dispositivo';
+var dosPasos = { email: '', codigo: '', vence: 0, intentos: 0, reenvioDesde: 0, timer: null };
+function sesionActiva() { try { return !!sessionStorage.getItem(SESION); } catch (e) { return !!window._sesion; } }
+function iniciarSesion(email) { try { sessionStorage.setItem(SESION, email); } catch (e) { window._sesion = email; } }
+function cerrarSesion() { try { sessionStorage.removeItem(SESION); } catch (e) {} window._sesion = null; }
+function dispositivoConfiable(email) { try { var d = JSON.parse(localStorage.getItem(CONFIABLE) || 'null'); return d && d.email === email && d.hasta > Date.now(); } catch (e) { return false; } }
+function enmascarar(email) { var p = email.split('@'); return p[0].slice(0, 1) + '•••' + (p[0].length > 2 ? p[0].slice(-1) : '') + '@' + p[1]; }
+function errorLogin(t) { var el = document.getElementById('error-login'); el.textContent = t; el.classList.toggle('visible', !!t); }
+function irPaso(n) {
+    document.getElementById('paso-1').classList.toggle('oculto', n !== 1);
+    document.getElementById('paso-2').classList.toggle('oculto', n !== 2);
+    document.getElementById('barra-paso-2').classList.toggle('on', n === 2);
+    if (n === 1) { clearInterval(dosPasos.timer); document.getElementById('pass').value = ''; document.getElementById('email').focus(); }
+}
+function enviarCodigo() {
+    dosPasos.codigo = String(Math.floor(100000 + Math.random() * 900000));
+    dosPasos.vence = Date.now() + 5 * 60000; dosPasos.reenvioDesde = Date.now() + 30000; dosPasos.intentos = 0;
+    document.getElementById('demo-codigo').textContent = dosPasos.codigo;
+    document.querySelectorAll('#codigo-2fa input').forEach(function (i) { i.value = ''; });
+    document.getElementById('msg-2fa').textContent = '';
+    document.querySelector('#codigo-2fa input').focus();
+    clearInterval(dosPasos.timer); dosPasos.timer = setInterval(relojDosPasos, 500); relojDosPasos();
+}
+function relojDosPasos() {
+    var resta = Math.max(0, dosPasos.vence - Date.now());
+    document.getElementById('vence-2fa').textContent = resta ? 'El código vence en ' + Math.floor(resta / 60000) + ':' + pad(Math.floor(resta / 1000) % 60, 2) : 'El código venció. Pide uno nuevo.';
+    var espera = Math.ceil((dosPasos.reenvioDesde - Date.now()) / 1000), b = document.getElementById('reenviar-2fa');
+    b.disabled = espera > 0; b.textContent = espera > 0 ? 'Reenviar en ' + espera + ' s' : 'Reenviar código';
+}
+document.getElementById('form-login').addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    var email = document.getElementById('email').value.trim().toLowerCase(), pass = document.getElementById('pass').value;
+    if (!/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i.test(email)) { errorLogin('Escribe un email válido.'); return; }
+    if (!pass) { errorLogin('Escribe tu contraseña.'); return; }
+    var u = usuarioPorEmail(email);
+    if (!u || u.hash !== hashClave(email, pass)) {
+        registrar('ALERTA', 'Sesión', email, 'Intento de acceso con email o contraseña incorrectos', email);
+        errorLogin('Email o contraseña incorrectos.'); document.getElementById('pass').value = ''; return;
+    }
+    if (!u.activo) {
+        registrar('ALERTA', 'Sesión', email, 'Intento de acceso de una cuenta desactivada', email);
+        errorLogin('Tu cuenta está desactivada. Pide ayuda a un administrador.'); document.getElementById('pass').value = ''; return;
+    }
+    errorLogin(''); dosPasos.email = email;
+    if (!u.dosPasos) { entrar(email, 'sin verificación en dos pasos'); return; }
+    if (dispositivoConfiable(email)) { entrar(email, 'dispositivo de confianza'); return; }
+    document.getElementById('destino-2fa').textContent = enmascarar(email);
+    irPaso(2); enviarCodigo();
+});
+document.getElementById('codigo-2fa').addEventListener('input', function (ev) {
+    var cajas = Array.from(document.querySelectorAll('#codigo-2fa input')), i = cajas.indexOf(ev.target), dig = ev.target.value.replace(/\D/g, '');
+    if (dig.length > 1) { dig.slice(0, 6).split('').forEach(function (d, k) { if (cajas[k]) cajas[k].value = d; }); cajas[Math.min(5, dig.length - 1)].focus(); }
+    else { ev.target.value = dig.slice(-1); if (dig && cajas[i + 1]) cajas[i + 1].focus(); }
+    document.getElementById('codigo-2fa').classList.remove('error'); document.getElementById('msg-2fa').textContent = '';
+    if (cajas.every(function (c) { return c.value; })) document.getElementById('form-2fa').requestSubmit();
+});
+document.getElementById('codigo-2fa').addEventListener('keydown', function (ev) {
+    var cajas = Array.from(document.querySelectorAll('#codigo-2fa input')), i = cajas.indexOf(ev.target);
+    if (ev.key === 'Backspace' && !ev.target.value && cajas[i - 1]) { cajas[i - 1].focus(); cajas[i - 1].value = ''; }
+    if (ev.key === 'ArrowLeft' && cajas[i - 1]) cajas[i - 1].focus();
+    if (ev.key === 'ArrowRight' && cajas[i + 1]) cajas[i + 1].focus();
+});
+document.getElementById('form-2fa').addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    var cajas = Array.from(document.querySelectorAll('#codigo-2fa input')), ingresado = cajas.map(function (c) { return c.value; }).join(''), msg = document.getElementById('msg-2fa');
+    function fallo(t) { msg.textContent = t; var g = document.getElementById('codigo-2fa'); g.classList.remove('error'); void g.offsetWidth; g.classList.add('error'); cajas.forEach(function (c) { c.value = ''; }); cajas[0].focus(); }
+    if (ingresado.length < 6) { fallo('Completa los 6 dígitos.'); return; }
+    if (Date.now() > dosPasos.vence) { fallo('El código venció. Pide uno nuevo.'); return; }
+    if (ingresado !== dosPasos.codigo) {
+        if (++dosPasos.intentos >= 3) {
+            registrar('ALERTA', 'Sesión', dosPasos.email, 'Bloqueo: 3 códigos de verificación incorrectos', dosPasos.email);
+            irPaso(1); errorLogin('Demasiados intentos fallidos. Vuelve a iniciar sesión.'); return;
+        }
+        fallo('Código incorrecto. Te quedan ' + (3 - dosPasos.intentos) + ' intento' + (3 - dosPasos.intentos === 1 ? '' : 's') + '.'); return;
+    }
+    clearInterval(dosPasos.timer);
+    if (document.getElementById('recordar-2fa').checked) { try { localStorage.setItem(CONFIABLE, JSON.stringify({ email: dosPasos.email, hasta: Date.now() + 30 * 86400000 })); } catch (e) {} }
+    irPaso(1); entrar(dosPasos.email, 'verificado con código');
+});
+document.getElementById('reenviar-2fa').addEventListener('click', function () { enviarCodigo(); aviso('Te enviamos un código nuevo.'); });
+document.getElementById('volver-2fa').addEventListener('click', function () { irPaso(1); });
+
+/* =====================================================================
+   SHA-256 (las contraseñas se guardan como hash, nunca en texto)
+   ===================================================================== */
+function sha256(texto) {
+    function rotr(x, n) { return (x >>> n) | (x << (32 - n)); }
+    var K = [0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5, 0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3,
+        0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174, 0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
+        0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967, 0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13,
+        0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85, 0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
+        0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3, 0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208,
+        0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2];
+    var H = [0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19];
+    var bytes = unescape(encodeURIComponent(texto)), l = bytes.length, words = [], i, t;
+    for (i = 0; i < l; i++) words[i >> 2] |= bytes.charCodeAt(i) << (24 - (i % 4) * 8);
+    words[l >> 2] |= 0x80 << (24 - (l % 4) * 8);
+    words[((l + 8) >> 6 << 4) + 15] = l * 8;
+    var w = new Array(64);
+    for (i = 0; i < words.length; i += 16) {
+        var a = H[0], b = H[1], c = H[2], d = H[3], e = H[4], f = H[5], g = H[6], h = H[7];
+        for (t = 0; t < 64; t++) {
+            if (t < 16) w[t] = words[i + t] | 0;
+            else {
+                var s0 = rotr(w[t - 15], 7) ^ rotr(w[t - 15], 18) ^ (w[t - 15] >>> 3);
+                var s1 = rotr(w[t - 2], 17) ^ rotr(w[t - 2], 19) ^ (w[t - 2] >>> 10);
+                w[t] = (w[t - 16] + s0 + w[t - 7] + s1) | 0;
+            }
+            var t1 = (h + (rotr(e, 6) ^ rotr(e, 11) ^ rotr(e, 25)) + ((e & f) ^ (~e & g)) + K[t] + w[t]) | 0;
+            var t2 = ((rotr(a, 2) ^ rotr(a, 13) ^ rotr(a, 22)) + ((a & b) ^ (a & c) ^ (b & c))) | 0;
+            h = g; g = f; f = e; e = (d + t1) | 0; d = c; c = b; b = a; a = (t1 + t2) | 0;
+        }
+        H[0] = (H[0] + a) | 0; H[1] = (H[1] + b) | 0; H[2] = (H[2] + c) | 0; H[3] = (H[3] + d) | 0;
+        H[4] = (H[4] + e) | 0; H[5] = (H[5] + f) | 0; H[6] = (H[6] + g) | 0; H[7] = (H[7] + h) | 0;
+    }
+    return H.map(function (x) { return ('00000000' + (x >>> 0).toString(16)).slice(-8); }).join('');
+}
+
+/* =====================================================================
+   USUARIOS Y ROLES
+   ===================================================================== */
+var ROLES = {
+    ADMIN: { txt: 'Administrador', badge: 'badge-alerta', desc: 'Todo el sistema, más crear usuarios y ver el historial de auditoría.',
+             vistas: ['dashboard', 'flota', 'arriendos', 'ordenes', 'tipos', 'admin'], crea: ['equipo', 'tipo', 'arriendo', 'usuario'] },
+    PLANIFICADOR: { txt: 'Planificador', badge: 'badge-azul', desc: 'Flota, arriendos, órdenes de trabajo y tipos. No administra usuarios.',
+             vistas: ['dashboard', 'flota', 'arriendos', 'ordenes', 'tipos'], crea: ['equipo', 'tipo', 'arriendo'] },
+    TECNICO: { txt: 'Técnico', badge: 'badge-neutral', desc: 'Ve la flota y ejecuta órdenes de trabajo. No crea equipos ni arriendos.',
+             vistas: ['dashboard', 'flota', 'ordenes'], crea: [] }
+};
+var credencialPendiente = null, usuarioEditando = null, tabAdmin = 'usuarios';
+
+function hashClave(email, clave) { return sha256('vilasmotor:' + email.toLowerCase() + ':' + clave); }
+function emailSesion() { try { return sessionStorage.getItem(SESION); } catch (e) { return window._sesion; } }
+function usuarioPorEmail(email) { return (estado.usuarios || []).filter(function (u) { return u.email === String(email || '').toLowerCase(); })[0]; }
+function usuarioPorId(id) { return estado.usuarios.filter(function (u) { return u.id === id; })[0]; }
+function usuarioActual() { return usuarioPorEmail(emailSesion()); }
+function idUsuario(id) { return 'U-' + pad(id); }
+function nombreDe(email) { if (email === 'sistema') return 'Sistema'; var u = usuarioPorEmail(email); return u ? u.nombre : email; }
+function iniciales(nombre) { return nombre.split(/\s+/).filter(Boolean).slice(0, 2).map(function (p) { return p[0].toUpperCase(); }).join(''); }
+function fechaHora(ts) { return new Date(ts).toLocaleString('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }); }
+
+function semillaUsuarios() {
+    return USUARIOS.map(function (u, i) {
+        return { id: i + 1, nombre: u.nombre, email: u.email.toLowerCase(), rol: u.rol, hash: hashClave(u.email, u.clave),
+                 activo: u.activo !== false, dosPasos: true, creado: Date.parse('2026-08-03T09:00:00'), ultimoAcceso: null };
+    });
+}
+function puedeVer(vista) {
+    if (vista === 'login') return true;
+    var u = usuarioActual();
+    return !!(u && ROLES[u.rol] && ROLES[u.rol].vistas.indexOf(vista) !== -1);
+}
+function puedeCrear(clave) {
+    if (['credenciales', 'ayuda', 'editarUsuario'].indexOf(clave) !== -1) return true;
+    var u = usuarioActual();
+    return !!(u && ROLES[u.rol].crea.indexOf(clave) !== -1);
+}
+function aplicarRol() {
+    var u = usuarioActual();
+    Object.keys(ROLES).forEach(function (r) { document.body.classList.remove('rol-' + r); });
+    if (u) document.body.classList.add('rol-' + u.rol);
+    document.querySelectorAll('#nav a').forEach(function (a) { a.style.display = puedeVer(a.dataset.ir) ? '' : 'none'; });
+    document.getElementById('avatar').textContent = u ? iniciales(u.nombre) : '';
+    document.getElementById('avatar').title = u ? u.nombre + ' · ' + ROLES[u.rol].txt + ' (' + u.email + ')' : '';
+    document.getElementById('usuario-nombre').innerHTML = u ? esc(u.nombre) + '<small>' + ROLES[u.rol].txt + '</small>' : '';
+}
+function entrar(email, via) {
+    var u = usuarioPorEmail(email);
+    iniciarSesion(email);
+    u.ultimoAcceso = Date.now();
+    // Cada sesión parte limpia: sin filtros de la persona anterior
+    Object.keys(filtro).forEach(function (k) { filtro[k] = ''; });
+    filtroAud = { usuario: '', accion: '', modulo: '', periodo: '', q: '' };
+    tabAdmin = 'usuarios'; filtroOT = 'ABIERTAS'; modoFlota = 'tabla';
+    registrar('ACCESO', 'Sesión', email, 'Inicio de sesión (' + via + ')', email);
+    mostrar('dashboard');
+    aviso('Hola, ' + u.nombre.split(' ')[0] + '. Sesión iniciada como ' + ROLES[u.rol].txt.toLowerCase() + '.');
+    var k = 'vilasmotor-ayuda-' + email, visto = null;
+    try { visto = localStorage.getItem(k); localStorage.setItem(k, '1'); } catch (e) {}
+    if (!visto) setTimeout(function () { if (!formActual) abrirModal('ayuda'); }, 400);
+}
+function generarClave() {
+    var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789', c;
+    do {
+        var r = new Uint32Array(12);
+        if (window.crypto && crypto.getRandomValues) crypto.getRandomValues(r); else for (var i = 0; i < 12; i++) r[i] = Math.floor(Math.random() * 1e9);
+        c = Array.from(r).map(function (n) { return chars[n % chars.length]; }).join('');
+    } while (!reglasClave(c).every(function (x) { return x.ok; }));
+    return c;
+}
+function reglasClave(c) {
+    return [{ ok: c.length >= 10, txt: '10 caracteres o más' }, { ok: /[A-Z]/.test(c), txt: 'Una mayúscula' },
+            { ok: /[a-z]/.test(c), txt: 'Una minúscula' }, { ok: /\d/.test(c), txt: 'Un número' }];
+}
+function opcionesRol(sel) {
+    return Object.keys(ROLES).map(function (r) { return '<option value="' + r + '"' + (r === sel ? ' selected' : '') + '>' + ROLES[r].txt + '</option>'; }).join('');
+}
+
+/* =====================================================================
+   AUDITORÍA: cada acción queda registrada con quién, cuándo y qué cambió
+   ===================================================================== */
+var ACCIONES = {
+    ACCESO: { txt: 'Acceso', badge: 'badge-neutral' }, CREAR: { txt: 'Crear', badge: 'badge-ok' },
+    ACTUALIZAR: { txt: 'Actualizar', badge: 'badge-azul' }, ALERTA: { txt: 'Alerta', badge: 'badge-alerta' }, SISTEMA: { txt: 'Sistema', badge: 'badge-warn' }
+};
+var filtroAud = { usuario: '', accion: '', modulo: '', periodo: '', q: '' };
+
+function registrar(accion, modulo, registro, detalle, email) {
+    if (!estado.auditoria) estado.auditoria = [];
+    var u = usuarioActual();
+    estado.auditoria.push({ id: maxDe(estado.auditoria, 'id') + 1, fecha: Date.now(), usuario: String(email || (u ? u.email : 'sistema')).toLowerCase(),
+                            accion: accion, modulo: modulo, registro: registro || '', detalle: detalle || '' });
+    if (estado.auditoria.length > 2000) estado.auditoria.splice(0, estado.auditoria.length - 2000);
+    guardar();
+}
+function semillaAuditoria(s) {
+    var admin = USUARIOS[0].email, r = [];
+    function add(fecha, usuario, accion, modulo, registro, detalle) { r.push({ fecha: fecha, usuario: usuario, accion: accion, modulo: modulo, registro: registro, detalle: detalle }); }
+    s.ordenes.forEach(function (o) {
+        var cerrada = o.estado === 'CERRADA';
+        add(Date.parse(o.fecha + 'T17:00:00'), 'sistema', cerrada ? 'ACTUALIZAR' : 'CREAR', 'Orden de trabajo', 'OT ' + o.numero,
+            (cerrada ? 'Importada de planilla: cerrada a las ' + fmt(o.horometro) + ' · ' : 'OT abierta · ') + o.equipo + ' · servicio ' + fmt(o.servicio));
+    });
+    USUARIOS.forEach(function (u, i) { add(Date.parse('2026-08-03T09:00:00') + i * 60000, 'sistema', 'CREAR', 'Usuario', u.email, 'Usuario ' + u.nombre + ' con rol ' + ROLES[u.rol].txt); });
+    s.equipos.forEach(function (e, i) { add(Date.parse('2026-08-05T10:00:00') + i * 60000, admin, 'CREAR', 'Equipo', e.codigo, idTxt(e.id) + ' · ' + e.nombre + (e.codigoAnterior ? ' (ant. ' + e.codigoAnterior + ')' : '')); });
+    s.arriendos.forEach(function (a) { add(Date.parse(a.desde + 'T09:00:00'), admin, 'CREAR', 'Arriendo', a.numero, a.equipo + ' a ' + a.cliente + ' en ' + a.lugar); });
+    r.sort(function (a, b) { return a.fecha - b.fecha; });
+    r.forEach(function (x, i) { x.id = i + 1; });
+    return r;
+}
+function cambiosDeEquipo(codigo) {
+    return (estado.auditoria || []).filter(function (a) { return a.registro === codigo || (' ' + a.detalle + ' ').indexOf(' ' + codigo + ' ') !== -1; })
+        .sort(function (a, b) { return b.id - a.id; });
+}
+function equipoDeRegistro(a) {
+    if (equipoPorCodigo(a.registro)) return a.registro;
+    var m = /^OT (\d+)$/.exec(a.registro);
+    if (m) { var o = estado.ordenes.filter(function (x) { return x.numero === +m[1]; })[0]; return o ? o.equipo : null; }
+    if (/^ARR-\d+$/.test(a.registro)) { var ar = estado.arriendos.filter(function (x) { return x.numero === a.registro; })[0]; return ar ? ar.equipo : null; }
+    return null;
+}
+function auditoriaFiltrada() {
+    var desde = filtroAud.periodo ? (function () { var d = new Date(); d.setHours(0, 0, 0, 0); return d.getTime() - (+filtroAud.periodo - 1) * 86400000; })() : 0;
+    var q = sinTildes(filtroAud.q.toLowerCase());
+    return estado.auditoria.filter(function (a) {
+        if (filtroAud.usuario && a.usuario !== filtroAud.usuario) return false;
+        if (filtroAud.accion && a.accion !== filtroAud.accion) return false;
+        if (filtroAud.modulo && a.modulo !== filtroAud.modulo) return false;
+        if (a.fecha < desde) return false;
+        if (q && sinTildes([a.usuario, nombreDe(a.usuario), a.modulo, a.registro, a.detalle].join(' ').toLowerCase()).indexOf(q) === -1) return false;
+        return true;
+    }).sort(function (a, b) { return b.id - a.id; });
+}
+
+function pintarAdmin() {
+    document.querySelectorAll('.tabs [data-tab]').forEach(function (b) { b.setAttribute('aria-selected', b.dataset.tab === tabAdmin ? 'true' : 'false'); });
+    document.getElementById('admin-usuarios').hidden = tabAdmin !== 'usuarios';
+    document.getElementById('admin-auditoria').hidden = tabAdmin !== 'auditoria';
+    document.getElementById('cuenta-usuarios').textContent = estado.usuarios.length;
+    document.getElementById('cuenta-auditoria').textContent = estado.auditoria.length;
+    if (tabAdmin === 'usuarios') pintarUsuarios(); else pintarAuditoria();
+}
+function pintarUsuarios() {
+    var yo = usuarioActual(), lista = estado.usuarios.slice().sort(function (a, b) { return b.id - a.id; });
+    var activos = lista.filter(function (u) { return u.activo; }).length;
+    document.getElementById('contador-usuarios').innerHTML = '<b>' + activos + '</b> activo' + (activos === 1 ? '' : 's') + ' de ' + lista.length;
+    document.getElementById('tabla-usuarios').innerHTML = lista.map(function (u) {
+        return '<tr class="clic' + (recien === 'U' + u.id ? ' recien' : '') + '" data-usuario="' + u.id + '" title="Editar usuario"><td><span class="id-equipo">' + idUsuario(u.id) + '</span></td><td><b>' + esc(u.nombre) + '</b>' +
+            (yo && yo.id === u.id ? ' <span class="badge badge-neutral">Tú</span>' : '') + (esNuevo(u) ? NUEVO : '') + '<span class="codigo-ant">' + esc(u.email) + '</span></td><td>' + badge(ROLES, u.rol) +
+            '</td><td>' + (u.activo ? '<span class="badge badge-ok">Activo</span>' : '<span class="badge badge-neutral">Desactivado</span>') +
+            '</td><td>' + (u.dosPasos ? 'Código en 2 pasos' : '<span style="color:var(--alerta)">Solo contraseña</span>') + '</td><td>' + (u.ultimoAcceso ? fechaHora(u.ultimoAcceso) : 'Nunca') + '</td></tr>';
+    }).join('');
+    document.getElementById('roles-ayuda').innerHTML = Object.keys(ROLES).map(function (r) { return '<div class="rol-card"><b>' + ROLES[r].txt + '</b>' + ROLES[r].desc + '</div>'; }).join('');
+}
+function opcionesAud(campo, valores, textos, todos) {
+    var sel = document.querySelector('select[data-fa="' + campo + '"]');
+    var html = '<option value="">' + todos + '</option>' + valores.map(function (v) { return '<option value="' + esc(v) + '"' + (v === filtroAud[campo] ? ' selected' : '') + '>' + esc(textos(v)) + '</option>'; }).join('');
+    if (sel.dataset.html !== html && document.activeElement !== sel) { sel.innerHTML = html; sel.dataset.html = html; }
+    sel.closest('.filtro-campo').classList.toggle('activo', !!filtroAud[campo]);
+}
+function pintarAuditoria() {
+    var todos = estado.auditoria;
+    var usuarios = Array.from(new Set(todos.map(function (a) { return a.usuario; }))).sort();
+    var modulos = Array.from(new Set(todos.map(function (a) { return a.modulo; }))).sort(function (a, b) { return a.localeCompare(b, 'es'); });
+    opcionesAud('usuario', usuarios, function (v) { return nombreDe(v) + (v !== 'sistema' && nombreDe(v) !== v ? ' (' + v + ')' : ''); }, 'Todos los usuarios');
+    opcionesAud('accion', Object.keys(ACCIONES), function (v) { return ACCIONES[v].txt; }, 'Todas las acciones');
+    opcionesAud('modulo', modulos, function (v) { return v; }, 'Todos los módulos');
+    document.querySelector('select[data-fa="periodo"]').value = filtroAud.periodo;
+    var q = document.querySelector('input[data-fa="q"]'); if (document.activeElement !== q) q.value = filtroAud.q;
+    var lista = auditoriaFiltrada(), max = 300;
+    document.getElementById('contador-auditoria').innerHTML = '<b>' + lista.length + '</b> registro' + (lista.length === 1 ? '' : 's');
+    document.getElementById('tabla-auditoria').innerHTML = lista.slice(0, max).map(function (a) {
+        var eq = equipoDeRegistro(a);
+        return '<tr' + (eq ? ' class="clic" data-equipo="' + esc(eq) + '" title="Abrir ficha de ' + esc(eq) + '"' : '') + '><td class="aud-fecha">' + fechaHora(a.fecha) +
+            '</td><td><span class="aud-usuario">' + esc(nombreDe(a.usuario)) + '</span><span class="codigo-ant">' + esc(a.usuario) + '</span></td><td>' + badge(ACCIONES, a.accion) +
+            '</td><td>' + esc(a.modulo) + '</td><td><span class="codigo" style="font-size:15px">' + esc(a.registro) + '</span></td><td class="aud-detalle">' + esc(a.detalle) + '</td></tr>';
+    }).join('') + (lista.length > max ? '<tr><td colspan="6" class="vacio">Se muestran los ' + max + ' más recientes. Usa los filtros o descarga el CSV para ver todo.</td></tr>' : '')
+        || '<tr><td colspan="6" class="vacio">No hay registros con esos filtros.</td></tr>';
+}
+function exportarCSV() {
+    var filas = [['Fecha', 'Email', 'Usuario', 'Acción', 'Módulo', 'Registro', 'Detalle']].concat(auditoriaFiltrada().map(function (a) {
+        return [fechaHora(a.fecha), a.usuario, nombreDe(a.usuario), ACCIONES[a.accion].txt, a.modulo, a.registro, a.detalle];
+    }));
+    var csv = '﻿' + filas.map(function (f) { return f.map(function (c) { return '"' + String(c).replace(/"/g, '""') + '"'; }).join(';'); }).join('\r\n');
+    var url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+    var a = document.createElement('a'); a.href = url; a.download = 'auditoria-vilas-motor-' + hoyISO() + '.csv';
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+    registrar('SISTEMA', 'Auditoría', 'CSV', 'Descarga del historial (' + (filas.length - 1) + ' registros)');
+    aviso('Historial descargado (' + (filas.length - 1) + ' registros).');
+}
+
+/* =====================================================================
+   FORMULARIOS DE USUARIOS, CREDENCIALES Y AYUDA
+   ===================================================================== */
+FORMULARIOS.usuario = {
+    eyebrow: 'Administración', titulo: 'Nuevo usuario', boton: 'Crear usuario',
+    campos: function () {
+        this.claveAuto = generarClave(); this.modo = 'auto';
+        return '<div class="campo" id="c-unombre"><label for="f-unombre">Nombre completo</label><input id="f-unombre" autocomplete="off" placeholder="Ej: María González"><span class="msg-error">Indica el nombre.</span></div>' +
+            '<div class="campo" id="c-uemail"><label for="f-uemail">Email</label><input id="f-uemail" type="email" autocomplete="off" placeholder="nombre@vilasmotor.cl"><span class="msg-error" id="e-uemail">Escribe un email válido.</span></div>' +
+            '<div class="campo"><label for="f-urol">Rol</label><select id="f-urol">' + opcionesRol('PLANIFICADOR') + '</select><span class="ayuda" id="rol-desc"></span></div>' +
+            '<div class="campo"><label>Contraseña</label><div class="chips" id="f-modoclave" role="radiogroup"><span class="chip on" data-v="auto" role="radio" tabindex="0">Generar una segura</span><span class="chip" data-v="manual" role="radio" tabindex="0">Escribirla yo</span></div></div>' +
+            '<div class="campo" id="c-uclave" hidden><label for="f-uclave">Contraseña temporal</label><input id="f-uclave" autocomplete="new-password"><ul class="reglas" id="reglas"></ul><span class="msg-error">La contraseña no cumple los requisitos.</span></div>' +
+            '<label class="check"><input type="checkbox" id="f-u2fa" checked><span>Pedir código de verificación al entrar<small>Recomendado: además de la contraseña, se pide un código de 6 dígitos.</small></span></label>' +
+            '<dl class="auto" id="auto"></dl>';
+    },
+    actualizar: function () {
+        var f = FORMULARIOS.usuario, rol = val('f-urol');
+        document.getElementById('rol-desc').textContent = ROLES[rol].desc;
+        document.querySelectorAll('#f-modoclave .chip').forEach(function (c) { c.classList.toggle('on', c.dataset.v === f.modo); c.setAttribute('aria-checked', c.dataset.v === f.modo); });
+        document.getElementById('c-uclave').hidden = f.modo !== 'manual';
+        document.getElementById('reglas').innerHTML = reglasClave(document.getElementById('f-uclave').value).map(function (r) { return '<li' + (r.ok ? ' class="ok"' : '') + '>' + r.txt + '</li>'; }).join('');
+        document.getElementById('auto').innerHTML = '<div><dt>ID</dt><dd>' + idUsuario(maxDe(estado.usuarios, 'id') + 1) + '</dd></div><div><dt>Rol</dt><dd class="normal">' + ROLES[rol].txt + '</dd></div>' +
+            '<div><dt>Contraseña</dt><dd class="normal">' + (f.modo === 'auto' ? '<code>' + f.claveAuto + '</code>' : 'La que escribas') + '</dd></div>';
+    },
+    guardar: function () {
+        var f = FORMULARIOS.usuario, nombre = val('f-unombre').replace(/\s+/g, ' '), email = val('f-uemail').toLowerCase();
+        var okNombre = nombre.length >= 3, formato = /^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i.test(email), existe = !!usuarioPorEmail(email);
+        document.getElementById('c-unombre').classList.toggle('error', !okNombre);
+        document.getElementById('e-uemail').textContent = existe ? 'Ya existe un usuario con ese email.' : 'Escribe un email válido.';
+        document.getElementById('c-uemail').classList.toggle('error', !formato || existe);
+        var clave = f.modo === 'auto' ? f.claveAuto : document.getElementById('f-uclave').value;
+        var okClave = reglasClave(clave).every(function (r) { return r.ok; });
+        document.getElementById('c-uclave').classList.toggle('error', !okClave);
+        if (!okNombre || !formato || existe || !okClave) return false;
+        var rol = val('f-urol'), dos = document.getElementById('f-u2fa').checked, id = maxDe(estado.usuarios, 'id') + 1;
+        estado.usuarios.push({ id: id, nombre: nombre, email: email, rol: rol, hash: hashClave(email, clave), activo: true, dosPasos: dos, creado: Date.now(), ultimoAcceso: null });
+        registrar('CREAR', 'Usuario', email, 'Nuevo usuario ' + nombre + ' con rol ' + ROLES[rol].txt + (dos ? '' : ' (sin verificación en dos pasos)'));
+        credencialPendiente = { nombre: nombre, email: email, clave: clave, dosPasos: dos, motivo: 'nuevo' };
+        recien = 'U' + id; tabAdmin = 'usuarios';
+        setTimeout(function () { recien = null; }, 2600);
+        return true;
+    }
+};
+
+FORMULARIOS.editarUsuario = {
+    eyebrow: 'Administración', titulo: 'Editar usuario', boton: 'Guardar cambios',
+    campos: function () {
+        var u = usuarioPorId(usuarioEditando), yo = usuarioActual();
+        this.reset = false; this.claveNueva = generarClave();
+        return '<dl class="credencial" style="border-left-color:var(--negro)"><dt>' + idUsuario(u.id) + '</dt><dd>' + esc(u.nombre) + (yo.id === u.id ? ' (tú)' : '') + '</dd><dt>Email</dt><dd>' + esc(u.email) +
+            '</dd><dt>Último acceso</dt><dd>' + (u.ultimoAcceso ? fechaHora(u.ultimoAcceso) : 'Nunca') + '</dd></dl>' +
+            '<div class="campo"><label for="f-erol">Rol</label><select id="f-erol">' + opcionesRol(u.rol) + '</select><span class="ayuda" id="rol-desc"></span></div>' +
+            '<label class="check"><input type="checkbox" id="f-eactivo"' + (u.activo ? ' checked' : '') + '><span>Cuenta activa<small>Si la desactivas, no podrá entrar, pero su historial se conserva.</small></span></label>' +
+            '<label class="check"><input type="checkbox" id="f-e2fa"' + (u.dosPasos ? ' checked' : '') + '><span>Pedir código de verificación al entrar</span></label>' +
+            '<div class="campo"><label>Contraseña</label><div class="clave-box"><button type="button" class="btn btn-secondary btn-chico" data-reset-clave>Restablecer contraseña</button><span id="reset-info" class="ayuda">Genera una contraseña temporal nueva.</span></div></div>';
+    },
+    actualizar: function () {
+        var f = FORMULARIOS.editarUsuario;
+        document.getElementById('rol-desc').textContent = ROLES[val('f-erol')].desc;
+        document.getElementById('reset-info').innerHTML = f.reset ? 'Nueva contraseña: <code>' + f.claveNueva + '</code> · se aplica al guardar' : 'Genera una contraseña temporal nueva.';
+    },
+    guardar: function () {
+        var f = FORMULARIOS.editarUsuario, u = usuarioPorId(usuarioEditando), yo = usuarioActual();
+        var rol = val('f-erol'), activo = document.getElementById('f-eactivo').checked, dos = document.getElementById('f-e2fa').checked;
+        if (yo.id === u.id && !activo) { aviso('No puedes desactivar tu propia cuenta.'); return false; }
+        var otrosAdmins = estado.usuarios.filter(function (x) { return x.id !== u.id && x.rol === 'ADMIN' && x.activo; }).length;
+        if (u.rol === 'ADMIN' && u.activo && (rol !== 'ADMIN' || !activo) && !otrosAdmins) { aviso('Debe quedar al menos un administrador activo.'); return false; }
+        var cambios = 0;
+        if (rol !== u.rol) { registrar('ACTUALIZAR', 'Usuario', u.email, 'Rol: ' + ROLES[u.rol].txt + ' → ' + ROLES[rol].txt); u.rol = rol; cambios++; }
+        if (activo !== u.activo) { registrar(activo ? 'ACTUALIZAR' : 'ALERTA', 'Usuario', u.email, activo ? 'Cuenta reactivada' : 'Cuenta desactivada'); u.activo = activo; cambios++; }
+        if (dos !== u.dosPasos) { registrar(dos ? 'ACTUALIZAR' : 'ALERTA', 'Usuario', u.email, dos ? 'Verificación en dos pasos activada' : 'Verificación en dos pasos desactivada'); u.dosPasos = dos; cambios++; }
+        if (f.reset) {
+            u.hash = hashClave(u.email, f.claveNueva);
+            registrar('ACTUALIZAR', 'Usuario', u.email, 'Contraseña restablecida por un administrador');
+            credencialPendiente = { nombre: u.nombre, email: u.email, clave: f.claveNueva, dosPasos: u.dosPasos, motivo: 'reset' };
+            cambios++;
+        }
+        guardar();
+        aviso(cambios ? 'Cambios guardados para ' + u.nombre + '.' : 'No hubo cambios.');
+        if (yo.id === u.id && !puedeVer('admin')) setTimeout(function () { mostrar('dashboard'); }, 50);
+        return true;
+    }
+};
+
+FORMULARIOS.credenciales = {
+    eyebrow: 'Administración', titulo: 'Credenciales de acceso', boton: 'Listo', sinCancelar: true,
+    campos: function () {
+        var c = credencialPendiente || {};
+        return '<p class="page-subtitle" style="margin-bottom:14px">' + (c.motivo === 'reset' ? 'La contraseña se restableció.' : 'El usuario quedó creado.') + ' Entrégale estos datos de forma privada:</p>' +
+            '<dl class="credencial"><dt>Nombre</dt><dd>' + esc(c.nombre) + '</dd><dt>Email</dt><dd>' + esc(c.email) + ' <button class="link-btn" data-copiar="' + esc(c.email) + '">Copiar</button></dd>' +
+            '<dt>Contraseña temporal</dt><dd><span class="clave-box"><code>' + esc(c.clave) + '</code><button class="btn btn-secondary btn-chico" data-copiar="' + esc(c.clave) + '">Copiar</button></span></dd></dl>' +
+            '<p class="ayuda">Esta contraseña no se vuelve a mostrar.' + (c.dosPasos ? ' Al entrar se le pedirá además un código de 6 dígitos.' : '') + '</p>';
+    },
+    actualizar: function () {},
+    guardar: function () { credencialPendiente = null; return true; }
+};
+
+FORMULARIOS.ayuda = {
+    eyebrow: 'Ayuda', titulo: 'Cómo usar el sistema', boton: 'Entendido', sinCancelar: true,
+    campos: function () {
+        var u = usuarioActual(), rol = u ? u.rol : 'PLANIFICADOR';
+        var pasos = [
+            '<b>Toca cualquier número</b> del Dashboard para ver la lista exacta que lo forma.',
+            '<b>Filtra</b> por tipo, marca, modelo o estado: el filtro se mantiene en todas las pantallas, así los números siempre calzan.',
+            '<b>Toca una máquina</b> (en una tabla o en el mapa) para abrir su ficha con ubicación GPS, próximo servicio, historial y acciones.',
+            '<b>Toca una ubicación</b> 📍 para verla en el mapa.'
+        ];
+        if (ROLES[rol].crea.indexOf('equipo') !== -1) pasos.push('<b>Agrega máquinas</b> en Flota con "+ Nuevo equipo": el ID y el código se crean solos y lo nuevo aparece arriba.');
+        if (rol === 'ADMIN') pasos.push('<b>Administración</b>: crea usuarios, cambia roles y revisa el historial de auditoría de todo lo que se hizo.');
+        if (rol === 'TECNICO') pasos.push('<b>Órdenes de trabajo</b>: inicia y cierra las OT; al cerrarlas, el próximo servicio se recalcula solo.');
+        return '<p class="page-subtitle" style="margin-bottom:16px">Tu rol: <b>' + ROLES[rol].txt + '</b>. ' + ROLES[rol].desc + '</p><ol class="guia">' + pasos.map(function (p) { return '<li>' + p + '</li>'; }).join('') + '</ol>' +
+            '<div class="teclas"><span><kbd>/</kbd> buscar</span><span><kbd>Enter</kbd> abrir la fila seleccionada</span><span><kbd>Tab</kbd> moverse</span><span><kbd>Esc</kbd> cerrar</span></div>';
+    },
+    actualizar: function () {},
+    guardar: function () { return true; }
+};
+
+/* =====================================================================
+   ACCESIBILIDAD Y ACCIONES EXTRA
+   ===================================================================== */
+function hacerEnfocables() {
+    document.querySelectorAll('tr.clic:not([tabindex]), .mapa-item:not([tabindex])').forEach(function (r) { r.tabIndex = 0; });
+}
+function copiar(texto) {
+    function viejo() {
+        var t = document.createElement('textarea'); t.value = texto; document.body.appendChild(t); t.select();
+        try { document.execCommand('copy'); } catch (e) {} t.remove();
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(texto).catch(viejo); else viejo();
+    aviso('Copiado al portapapeles.');
+}
+// Devuelve true si atendió el clic
+function manejarExtra(el, ev) {
+    if (el.id === 'saltar') {
+        ev.preventDefault();
+        var m = document.querySelector('.vista.visible main') || document.querySelector('.vista.visible');
+        if (m) { m.setAttribute('tabindex', '-1'); m.focus(); }
+        return true;
+    }
+    if (el.matches('[data-ayuda]')) { abrirModal('ayuda'); return true; }
+    if (el.matches('[data-encuadrar]')) {
+        var k = el.dataset.encuadrar; seleccionMapa = null;
+        encuadrar(k, equiposFiltrados());
+        document.querySelectorAll('.mapa-item.sel').forEach(function (i) { i.classList.remove('sel'); });
+        return true;
+    }
+    if (el.matches('[data-tab]')) { tabAdmin = el.dataset.tab; pintarAdmin(); hacerEnfocables(); return true; }
+    if (el.matches('[data-usuario]')) { usuarioEditando = +el.dataset.usuario; abrirModal('editarUsuario'); return true; }
+    if (el.matches('[data-ver-auditoria]')) {
+        filtroAud = { usuario: '', accion: '', modulo: '', periodo: '', q: el.dataset.verAuditoria };
+        tabAdmin = 'auditoria'; mostrar('admin'); return true;
+    }
+    if (el.matches('[data-copiar]')) { copiar(el.dataset.copiar); return true; }
+    if (el.matches('[data-reset-clave]')) { FORMULARIOS.editarUsuario.reset = true; FORMULARIOS.editarUsuario.actualizar(); return true; }
+    if (el.matches('#f-modoclave .chip')) {
+        FORMULARIOS.usuario.modo = el.dataset.v; FORMULARIOS.usuario.actualizar();
+        if (el.dataset.v === 'manual') document.getElementById('f-uclave').focus();
+        return true;
+    }
+    if (el.id === 'exportar-csv') { exportarCSV(); return true; }
+    return false;
+}
+
+/* ===== Inicio ===== */
+cargar();
+document.getElementById('fecha').textContent = new Date().toLocaleDateString('es-CL', { weekday: 'long', day: 'numeric', month: 'long' });
+document.getElementById('leyenda').innerHTML = Object.keys(ESTADOS).map(function (k) { return '<span><span class="pin" style="background:' + ESTADOS[k].color + '"></span>' + ESTADOS[k].txt + '</span>'; }).join('') + '<span><span class="pin" style="background:#fff;border:2px solid #0b0b0c"></span>' + BASE.nombre + '</span>';
+mostrar(sesionActiva() ? 'dashboard' : 'login');
+hacerEnfocables();
+enVivo();
+setInterval(tickTelemetria, 3000);
+setInterval(function () { if (fichaAbierta) pintarFichaDatos(fichaAbierta); }, 1000);
+</script>
+</body>
+</html>
