@@ -1,0 +1,62 @@
+﻿Fila Excel;Campo;Valor original;Valor normalizado;Motivo
+2;modelo;FG20T 16;FG20T-16;unificado con la misma escritura del modelo
+5;modelo;FD50AT7;FD50AT-7;unificado con la misma escritura del modelo
+7;modelo;FG20T 16;FG20T-16;unificado con la misma escritura del modelo
+9;modelo;FD160E 8;FD160E-8;unificado con la misma escritura del modelo
+10;modelo;FD160E 8;FD160E-8;unificado con la misma escritura del modelo
+11;modelo;FD160E 8;FD160E-8;unificado con la misma escritura del modelo
+13;modelo;FD100 8;FD100-8;unificado con la misma escritura del modelo
+14;modelo;FD160E 8;FD160E-8;unificado con la misma escritura del modelo
+21;modelo;FD100 8;FD100-8;unificado con la misma escritura del modelo
+31;modelo;FD160E 8;FD160E-8;unificado con la misma escritura del modelo
+32;modelo;FD160E 8;FD160E-8;unificado con la misma escritura del modelo
+36;patente;3CX 4X4 (RCSZ-64);RCSZ64;patente venía dentro del modelo
+38;modelo;FD30T 17;FD30T-17;unificado con la misma escritura del modelo
+39;modelo;FD30T 17;FD30T-17;unificado con la misma escritura del modelo
+40;modelo;FD30T 17;FD30T-17;unificado con la misma escritura del modelo
+41;modelo;FD30T 17;FD30T-17;unificado con la misma escritura del modelo
+48;patente;3CX 4X4 (LPHL-61);LPHL61;patente venía dentro del modelo
+55;modelo;FD160E 8;FD160E-8;unificado con la misma escritura del modelo
+58;modelo;JS220 LC;JS220LC;unificado con la misma escritura del modelo
+59;modelo;JS220 LC;JS220LC;unificado con la misma escritura del modelo
+60;modelo;FD30T17;FD30T-17;unificado con la misma escritura del modelo
+66;maquinaria;RETRO EXCAVADORA;Retroexcavadora;unificado
+67;modelo;FD30T17;FD30T-17;unificado con la misma escritura del modelo
+68;modelo;FD30T17;FD30T-17;unificado con la misma escritura del modelo
+69;modelo;FD30T17;FD30T-17;unificado con la misma escritura del modelo
+70;modelo;FD30T17;FD30T-17;unificado con la misma escritura del modelo
+71;modelo;FD30T17;FD30T-17;unificado con la misma escritura del modelo
+72;modelo;FD30T17;FD30T-17;unificado con la misma escritura del modelo
+73;modelo;FD30T17;FD30T-17;unificado con la misma escritura del modelo
+80;modelo;J220LC;JS220LC;unificado con la misma escritura del modelo
+85;modelo;FD16E-8;FD160E-8;unificado con la misma escritura del modelo
+86;modelo;FD16E-8;FD160E-8;unificado con la misma escritura del modelo
+91;modelo;455 ZX;455ZX;unificado con la misma escritura del modelo
+92;modelo;455 ZX;455ZX;unificado con la misma escritura del modelo
+96;maquinaria;GRUA HORQULLA 7 TON;Grúa horquilla;error de tipeo
+97;numero_serie;JCB3CX4TER3325888;JCB3CX4TER3325888;N° de serie venía en la columna modelo
+98;numero_serie;JCB3CX4TPR3324034;JCB3CX4TPR3324034;N° de serie venía en la columna modelo
+200;fabricante;JBC;JCB;error de tipeo
+206;fabricante;JBC;JCB;error de tipeo
+251;fabricante;HAULLOTE;Haulotte;error de tipeo
+275;fabricante;MERCEDEZ BENZ;Mercedes-Benz;error de tipeo
+276;fabricante;MERCEDEZ BENZ;Mercedes-Benz;error de tipeo
+277;fabricante;MERCEDEZ BENZ;Mercedes-Benz;error de tipeo
+284;modelo;MOBILAR M50;MOBILAIR M50;unificado con la misma escritura del modelo
+285;modelo;MOBILAR M50;MOBILAIR M50;unificado con la misma escritura del modelo
+309;modelo;LN LEK1,450HZLED;LN LEK1.4-50HZ LED;unificado con la misma escritura del modelo
+310;modelo;LN LEK1,450HZLED;LN LEK1.4-50HZ LED;unificado con la misma escritura del modelo
+311;modelo;LN LEK1,450HZLED;LN LEK1.4-50HZ LED;unificado con la misma escritura del modelo
+312;modelo;LN LEK1,450HZLED;LN LEK1.4-50HZ LED;unificado con la misma escritura del modelo
+313;modelo;LN LEK1,450HZLED;LN LEK1.4-50HZ LED;unificado con la misma escritura del modelo
+314;modelo;LN LEK1,450HZLED;LN LEK1.4-50HZ LED;unificado con la misma escritura del modelo
+315;modelo;LN LEK1,450HZLED;LN LEK1.4-50HZ LED;unificado con la misma escritura del modelo
+316;modelo;LN LEK1,450HZLED;LN LEK1.4-50HZ LED;unificado con la misma escritura del modelo
+328;modelo;SOLAR HILIDHT MS 5;SOLAR HILIGHT MS 5;unificado con la misma escritura del modelo
+329;modelo;SOLAR HILIDHT MS 5;SOLAR HILIGHT MS 5;unificado con la misma escritura del modelo
+330;modelo;SOLAR HILIDHT MS 5;SOLAR HILIGHT MS 5;unificado con la misma escritura del modelo
+331;modelo;SOLAR HILIDHT MS 5;SOLAR HILIGHT MS 5;unificado con la misma escritura del modelo
+332;modelo;SOLAR HILIDHT MS 5;SOLAR HILIGHT MS 5;unificado con la misma escritura del modelo
+333;modelo;SOLAR HILIDHT MS 5;SOLAR HILIGHT MS 5;unificado con la misma escritura del modelo
+364;fabricante;HAULLOTE;Haulotte;error de tipeo
+366;numero_serie;S8510-8415;S8510-8415;N° de serie venía en la columna fabricante

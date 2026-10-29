@@ -157,7 +157,9 @@ tbody tr:last-child td { border-bottom: none; }
 .mapa-item small { display: block; color: var(--muted); font-size: 12.5px; }
 .pin { width: 12px; height: 12px; transform: rotate(45deg); }
 .marcador { display: flex; align-items: center; gap: 4px; }
-.marcador .rombo { width: 16px; height: 16px; transform: rotate(45deg); border: 2px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,.4); }
+.marcador .rombo { width: 13px; height: 13px; transform: rotate(45deg); border: 2px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,.4); flex-shrink: 0; }
+.zoom-lejos .marcador .etq { display: none; }
+.fila-mas td { text-align: center; padding: 14px; background: #fafafa; }
 .marcador .etq { background: var(--negro); color: #fff; font-family: var(--display); font-weight: 700; font-size: 12px; letter-spacing: .05em; padding: 1px 6px; white-space: nowrap; }
 .leyenda { display: flex; gap: 14px; flex-wrap: wrap; font-size: 13px; color: var(--texto-2); }
 .leyenda span { display: inline-flex; align-items: center; gap: 6px; }
@@ -351,7 +353,7 @@ tbody tr:last-child td { border-bottom: none; }
 .stat-link { background: none; border: 0; color: inherit; font: inherit; cursor: pointer; padding: 0; text-decoration: underline dotted; text-underline-offset: 3px; }
 .stat-link:hover { color: #fff; }
 
-.barra-filtros { background: var(--blanco); border: 1px solid var(--linea); border-top: 4px solid var(--negro); padding: 16px 18px 14px; margin-bottom: 24px; }
+.barra-filtros { background: var(--blanco); border: 1px solid var(--linea); padding: 12px 14px; margin-bottom: 22px; }
 .barra-filtros .filtros-fila { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
 .barra-filtros .filtro-campo.ancho { grid-column: span 1; }
 .fd-resumen b { font-family: var(--display); font-size: 18px; color: var(--negro); }
@@ -378,11 +380,40 @@ tr.recien td { animation: destello 2.4s ease; }
 .toggle-filtros { display: none; }
 @media (max-width: 900px) {
     .barra-filtros .filtros-fila { grid-template-columns: 1fr 1fr; }
-    .barra-filtros:not(.abierta) .filtros-fila { display: none; }
-    .barra-filtros .filtros-pie { margin-top: 0; }
-    .barra-filtros.abierta .filtros-pie { margin-top: 12px; }
-    .toggle-filtros { display: inline-flex; }
     .stat-card.clic::after { display: none; }
+}
+
+/* Barra de filtros simple: buscar + estado a la vista, el resto en "Más filtros" */
+.fb-fila { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.fb-buscar { flex: 1 1 260px; position: relative; }
+.fb-buscar svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 17px; height: 17px; color: var(--muted); pointer-events: none; }
+.fb-buscar input { width: 100%; height: 40px; border: 1px solid var(--linea-fuerte); padding: 0 12px 0 38px; font: inherit; font-size: 14.5px; background: #fafafa; }
+.fb-buscar input:focus { outline: none; border-color: var(--negro); background: #fff; }
+.fb-rapidos { display: flex; gap: 6px; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+.fb-rapidos::-webkit-scrollbar { display: none; }
+.fb-rapido { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 12px; border: 1px solid var(--linea-fuerte); background: #fff; font: inherit; font-size: 14px; color: var(--texto-2); cursor: pointer; border-radius: 999px; white-space: nowrap; }
+.fb-rapido .n { font-size: 12.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.fb-rapido .punto { width: 8px; height: 8px; border-radius: 50%; }
+.fb-rapido:hover { border-color: var(--negro); }
+.fb-rapido[aria-pressed="true"] { background: var(--negro); border-color: var(--negro); color: #fff; }
+.fb-rapido[aria-pressed="true"] .n { color: #bdbdc4; }
+.fb-mas { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 14px; border: 1px solid var(--linea-fuerte); background: #fff; font: inherit; font-size: 14px; font-weight: 600; color: var(--texto); cursor: pointer; }
+.fb-mas:hover, .fb-mas[aria-expanded="true"] { border-color: var(--negro); }
+.fb-mas .cuenta-filtros { background: var(--rojo); color: #fff; font-size: 12px; min-width: 20px; height: 20px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; padding: 0 6px; }
+.fb-mas .flecha { transition: transform .15s; font-size: 12px; }
+.fb-mas[aria-expanded="true"] .flecha { transform: rotate(180deg); }
+.fb-panel { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px 14px; margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--linea); }
+.fb-panel label { display: block; font-size: 13px; font-weight: 600; color: var(--texto-2); }
+.fb-panel select { display: block; width: 100%; height: 38px; margin-top: 4px; border: 1px solid var(--linea-fuerte); padding: 0 10px; font: inherit; font-size: 14px; background: #fff; }
+.fb-panel select:focus { outline: none; border-color: var(--negro); }
+.fb-panel .activo select { border-color: var(--rojo); font-weight: 600; }
+.fb-pie { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 10px; font-size: 14px; color: var(--texto-2); }
+.fb-pie b { font-family: var(--display); font-size: 17px; color: var(--negro); }
+.fb-pie[hidden], .fb-panel[hidden], .fb-mas .cuenta-filtros[hidden] { display: none; }
+@media (max-width: 700px) {
+    .fb-buscar { flex-basis: 100%; }
+    .fb-rapidos { flex: 1 1 0; min-width: 0; }
+    .fb-panel { grid-template-columns: 1fr 1fr; }
 }
 
 /* ===================== v5: usuarios, auditoría y accesibilidad ===================== */
@@ -803,51 +834,24 @@ var FAENAS = [
 var INS_GEN = function (extra) {   // planilla: pauta de insumos G45QX
     return [['Aceite motor Total Rubia Tir 7400 15W40', '11 L'], ['Filtro aceite motor 02/971635', '1'], ['Filtro combustible 02/971620', '1'], ['Filtro aire exterior 02/971664', '1']].concat(extra);
 };
-var DATOS = {
-    tipos: [
-        { nombre: 'Grúa horquilla', unidad: 'HORAS', intervalos: [250, 500, 1000, 2000],
-          insumos: { 250: [['Aceite motor 15W40', '8 L'], ['Filtro aceite motor', '1'], ['Filtro combustible', '1'], ['Filtro aire exterior', '1'], ['Logo adhesivo mantención', '1']],
-                     1000: [['Aceite motor 15W40', '8 L'], ['Filtro aceite motor', '1'], ['Filtro combustible', '1'], ['Filtro aire exterior', '1'], ['Filtro aire interior', '1'], ['Logo adhesivo mantención', '1']] } },
-        { nombre: 'Generador', unidad: 'HORAS', intervalos: [250, 500, 1000, 2000],
-          insumos: { 250: INS_GEN([['Logo adhesivo mantención', '1'], ['Refrigerante', '10 L']]),
-                     500: INS_GEN([['Correa ventilador JCB G45QX', '1'], ['Logo adhesivo mantención', '1']]),
-                     1000: INS_GEN([['Filtro aire interior', '1'], ['Logo adhesivo mantención', '1']]),
-                     2000: INS_GEN([['Filtro aire interior', '1'], ['Logo adhesivo mantención', '1']]) } },
-        { nombre: 'Excavadora', unidad: 'HORAS', intervalos: [500, 1000], insumos: {} },
-        { nombre: 'Retroexcavadora', unidad: 'HORAS', intervalos: [500, 1000], insumos: {} },
-        { nombre: 'Camión', unidad: 'KM', intervalos: [10000, 20000], insumos: {} }
-    ],
-    equipos: [
-        { tipo: 'Grúa horquilla', codigoAnterior: 'V168', marca: 'Toyota', modelo: '8FGU25', detalle: '3.5 ton', patente: 'SVTJ39',
-          estado: 'EN_FAENA', horometro: 3620, ultimoServicio: 3157, cliente: 'Servicios Portuarios Iquique SpA', desde: '2026-09-01', hasta: '2026-12-31',
-          lugar: 'Puerto de Iquique', lat: -20.2052, lng: -70.1508 },
-        { tipo: 'Generador', codigoAnterior: 'VG10', marca: 'JCB', modelo: 'G45QX', patente: '',
-          estado: 'EN_FAENA', horometro: 480, ultimoServicio: 250, cliente: 'Minera Cerro Dragón SpA', desde: '2026-10-05', hasta: '2026-11-30',
-          lugar: 'Faena Pozo Almonte', lat: -20.2569, lng: -69.7859 },
-        { tipo: 'Generador', codigoAnterior: 'VG11', marca: 'JCB', modelo: 'G45QX', patente: '',
-          estado: 'DISPONIBLE', horometro: 1105, ultimoServicio: 1000, lugar: 'Taller', lat: -20.2452, lng: -70.1389 },
-        { tipo: 'Excavadora', codigoAnterior: 'EX-204', marca: 'Caterpillar', modelo: '320', patente: '',
-          estado: 'EN_MANTENIMIENTO', horometro: 3120, ultimoServicio: 2500, lugar: 'Taller', lat: -20.2444, lng: -70.1398, sinSenal: true },
-        { tipo: 'Retroexcavadora', codigoAnterior: 'RET-118', marca: 'JCB', modelo: '3CX', patente: '',
-          estado: 'DISPONIBLE', horometro: 1450.5, ultimoServicio: 1000, lugar: 'Taller', lat: -20.2455, lng: -70.1401 },
-        { tipo: 'Camión', codigoAnterior: 'CAM-301', marca: 'Mercedes-Benz', modelo: 'Actros 2645', patente: 'BJKT45',
-          estado: 'EN_FAENA', horometro: 128400, ultimoServicio: 120000, cliente: 'Logística Tarapacá SpA', desde: '2026-10-20', hasta: '',
-          lugar: 'Ruta 16, Alto Hospicio', lat: -20.2690, lng: -70.0986, ruta: true }
-    ],
-    ordenes: [   // planilla: historial de mantenciones de la V168
-        { numero: 89867,  equipo: 'V168', fecha: '2023-10-16', servicio: 250,  horometro: 828,  estado: 'CERRADA' },
-        { numero: 90717,  equipo: 'V168', fecha: '2023-11-29', servicio: 1000, horometro: 1083, estado: 'CERRADA' },
-        { numero: 91902,  equipo: 'V168', fecha: '2024-02-05', servicio: 250,  horometro: 1325, estado: 'CERRADA' },
-        { numero: 92935,  equipo: 'V168', fecha: '2024-04-04', servicio: 500,  horometro: 1575, estado: 'CERRADA' },
-        { numero: 94281,  equipo: 'V168', fecha: '2024-07-05', servicio: 250,  horometro: 1803, estado: 'CERRADA' },
-        { numero: 98470,  equipo: 'V168', fecha: '2025-02-26', servicio: 2000, horometro: 2080, estado: 'CERRADA' },
-        { numero: 100666, equipo: 'V168', fecha: '2025-06-26', servicio: 250,  horometro: 2363, estado: 'CERRADA' },
-        { numero: 102477, equipo: 'V168', fecha: '2025-10-01', servicio: 500,  horometro: 2601, estado: 'CERRADA' },
-        { numero: 105418, equipo: 'V168', fecha: '2026-03-13', servicio: 500,  horometro: 2896, estado: 'CERRADA' },
-        { numero: 106948, equipo: 'V168', fecha: '2026-05-29', servicio: 1000, horometro: 3157, estado: 'CERRADA' },
-        { numero: 107012, equipo: 'EX-204', fecha: '2026-10-24', servicio: 500, horometro: 3120, estado: 'EN_EJECUCION' }   // ejemplo
-    ]
+/* Flota real: Equipos.xlsx enviado por el profesor (394 equipos, normalizados) + la V168
+   de PLANILLA DE V168.xlsx. Tipo, marca, modelo, detalle, patente y N° de serie son reales.
+   Estado, horómetro, ubicación, arriendos, señal GPS y OT abiertas son SIMULADOS para la demo.
+   Formato de cada equipo: [tipo, marca, modelo, detalle, patente, serie, codigoAnterior, estado,
+   horometro, ultimoServicio, cliente, lugar, lat, lng, desde, hasta, sinSenal, ruta, rutaPos, arriendo] */
+var FLOTA = {"tipos":[{"nombre":"Grúa horquilla","prefijo":"GH","unidad":"HORAS","intervalos":[250,500,1000,2000]},{"nombre":"Generador","prefijo":"GE","unidad":"HORAS","intervalos":[250,500,1000,2000]},{"nombre":"Luminaria","prefijo":"LU","unidad":"HORAS","intervalos":[250,500,1000]},{"nombre":"Luminaria solar","prefijo":"LS","unidad":"HORAS","intervalos":[1000,2000]},{"nombre":"Camioneta","prefijo":"CT","unidad":"KM","intervalos":[10000,20000]},{"nombre":"Retroexcavadora","prefijo":"RE","unidad":"HORAS","intervalos":[500,1000]},{"nombre":"Compresor","prefijo":"CO","unidad":"HORAS","intervalos":[500,1000]},{"nombre":"Camión pluma","prefijo":"CP","unidad":"KM","intervalos":[10000,20000]},{"nombre":"Pluma","prefijo":"PL","unidad":"HORAS","intervalos":[500,1000]},{"nombre":"Camión","prefijo":"CA","unidad":"KM","intervalos":[10000,20000]},{"nombre":"Cama baja","prefijo":"CB","unidad":"KM","intervalos":[20000,40000]},{"nombre":"Tracto camión","prefijo":"TC","unidad":"KM","intervalos":[10000,20000]},{"nombre":"Manipulador","prefijo":"MA","unidad":"HORAS","intervalos":[500,1000]},{"nombre":"Minicargador","prefijo":"MC","unidad":"HORAS","intervalos":[250,500,1000]},{"nombre":"Soldadora","prefijo":"SO","unidad":"HORAS","intervalos":[250,500]},{"nombre":"Camión tolva","prefijo":"TV","unidad":"KM","intervalos":[10000,20000]},{"nombre":"Excavadora","prefijo":"EX","unidad":"HORAS","intervalos":[500,1000]},{"nombre":"Cargador frontal","prefijo":"CF","unidad":"HORAS","intervalos":[500,1000]},{"nombre":"Alza hombre","prefijo":"AH","unidad":"HORAS","intervalos":[250,500,1000]},{"nombre":"Plataforma tijera","prefijo":"PT","unidad":"HORAS","intervalos":[250,500]},{"nombre":"Camión aljibe","prefijo":"AL","unidad":"KM","intervalos":[10000,20000]},{"nombre":"Furgón","prefijo":"FU","unidad":"KM","intervalos":[10000,20000]},{"nombre":"Rodillo compactador","prefijo":"RC","unidad":"HORAS","intervalos":[250,500,1000]},{"nombre":"Minibús","prefijo":"MB","unidad":"KM","intervalos":[10000,20000]},{"nombre":"Camión lubricador","prefijo":"LB","unidad":"KM","intervalos":[10000,20000]},{"nombre":"Camión combustible","prefijo":"CC","unidad":"KM","intervalos":[10000,20000]},{"nombre":"Camión plataforma","prefijo":"PF","unidad":"KM","intervalos":[10000,20000]},{"nombre":"Camión plano","prefijo":"PN","unidad":"KM","intervalos":[10000,20000]},{"nombre":"Motoniveladora","prefijo":"MN","unidad":"HORAS","intervalos":[500,1000]},{"nombre":"Camión rescate","prefijo":"RS","unidad":"KM","intervalos":[10000,20000]},{"nombre":"Camión pantalla","prefijo":"PA","unidad":"KM","intervalos":[10000,20000]},{"nombre":"Semirremolque","prefijo":"SR","unidad":"KM","intervalos":[20000,40000]},{"nombre":"Rampla","prefijo":"RA","unidad":"KM","intervalos":[20000,40000]}],"clientes":["Minera Cerro Dragón SpA","Servicios Portuarios Iquique SpA","Constructora Altiplano Ltda","Áridos del Norte Ltda","Logística Tarapacá SpA"],"equipos":[[0,"","","3.5 ton","SVTJ39","","V168",1,3620.0,3157,1,"Puerto de Iquique",-20.2052,-70.1508,"2026-09-01","2026-12-31",0,0,0,"ARR-0129"],[0,"Komatsu","FG20T-16","2 ton","","","",0,2259.2,2190,-1,"Taller",-20.243875,-70.136899,"","",0,0,0,""],[0,"Komatsu","FD70-10","7 ton","","","",1,963.5,924,1,"Puerto de Iquique",-20.199161,-70.156655,"2026-08-04","2027-01-30",0,0,0,"ARR-0106"],[0,"Komatsu","FD70-10","7 ton","","","",2,7381.2,7065,-1,"Taller",-20.245319,-70.140806,"","",0,0,0,""],[0,"Komatsu","FD50AT-7","5 ton","","","",0,8072.7,7833,-1,"Taller",-20.244866,-70.139711,"","",0,0,0,""],[0,"Hangcha","CPCD-35","3.5 ton","","","",1,5208.4,5066,4,"Zofri, Iquique",-20.219913,-70.138247,"2026-05-07","2027-01-18",0,0,0,"ARR-0007"],[0,"Komatsu","FG20T-16","2 ton","","","",1,4961.1,4867,3,"Faena Pozo Almonte",-20.257425,-69.791874,"2026-08-24","2027-03-06",0,0,0,"ARR-0123"],[22,"Hamm","3412","","","","",2,7655.7,7334,-1,"Taller",-20.245427,-70.140204,"","",0,0,0,""],[0,"Komatsu","FD160E-8","16 ton","","","",1,4215.8,4176,3,"Faena Pozo Almonte",-20.256774,-69.791186,"2026-10-25","",0,0,0,"ARR-0179"],[0,"Komatsu","FD160E-8","16 ton","","","",0,2627.5,2587,-1,"Taller",-20.244895,-70.139166,"","",0,0,0,""],[0,"Komatsu","FD160E-8","16 ton","","","",0,3951.7,3931,-1,"Taller",-20.244837,-70.137043,"","",0,0,0,""],[17,"JCB","456ZX","","","","",0,5462.0,5069,-1,"Taller",-20.243529,-70.137037,"","",0,0,0,""],[0,"Komatsu","FD100-8","10 ton","","","",0,1113.5,1084,-1,"Taller",-20.246964,-70.137185,"","",0,0,0,""],[0,"Komatsu","FD160E-8","16 ton","","","",2,4205.0,3943,-1,"Taller",-20.246355,-70.139795,"","",0,0,0,""],[0,"Komatsu","FD50AT-10","5 ton","","","",0,2837.6,2837,-1,"Taller",-20.246194,-70.139085,"","",1,0,0,""],[0,"Komatsu","FD50AT-10","5 ton","","","",1,6017.8,5871,2,"Alto Hospicio",-20.264577,-70.093189,"2026-07-22","2026-11-13",0,0,0,"ARR-0087"],[0,"Komatsu","FD50AT-10","5 ton","","","",0,4473.0,4217,-1,"Taller",-20.24294,-70.138473,"","",0,0,0,""],[16,"JCB","JS220LC","","","","",0,4379.4,4333,-1,"Taller",-20.24548,-70.139062,"","",0,0,0,""],[12,"JCB","533-105 T","","","","",1,1122.1,1090,3,"Faena Pozo Almonte",-20.262408,-69.78451,"2026-05-15","2027-01-13",0,0,0,"ARR-0012"],[12,"JCB","531 70 T","","","","",0,7045.5,6790,-1,"Taller",-20.245228,-70.140856,"","",0,0,0,""],[0,"Komatsu","FD100-8","10 ton","","","",1,6650.4,6580,2,"Alto Hospicio",-20.272668,-70.091088,"2026-10-11","",0,0,0,"ARR-0161"],[0,"Komatsu","FD70-10","7 ton","","","",0,686.5,685,-1,"Taller",-20.243111,-70.140865,"","",0,0,0,""],[0,"Komatsu","LRTL85","16 ton","","","",1,3380.8,3239,4,"Zofri, Iquique",-20.212918,-70.131458,"2026-05-05","",0,0,0,"ARR-0002"],[5,"JCB","3CX 4X4","","","","",1,8550.2,8252,1,"Puerto de Iquique",-20.198632,-70.157959,"2026-07-27","2026-12-04",0,0,0,"ARR-0096"],[5,"JCB","3CX 4X4","","","","",2,5329.1,4644,-1,"Taller",-20.242814,-70.141297,"","",0,0,0,""],[0,"Komatsu","FD250-7","25 ton","","","",0,1105.3,1060,-1,"Taller",-20.244466,-70.13853,"","",0,0,0,""],[0,"Komatsu","FD70-10","7 ton","","","",1,2247.9,2182,0,"Faena minera Cerro Colorado",-20.04236,-69.257553,"2026-08-26","2026-11-23",0,0,0,"ARR-0127"],[0,"Komatsu","FD30T-17","3 ton","","","",0,1592.8,1281,-1,"Taller",-20.245402,-70.137565,"","",0,0,0,""],[0,"Komatsu","FD30T-17","3 ton","","","",0,4227.5,4196,-1,"Taller",-20.242949,-70.139019,"","",0,0,0,""],[0,"Komatsu","FD30T-17","3 ton","","","",2,5423.9,5115,-1,"Taller",-20.24596,-70.13805,"","",0,0,0,""],[0,"Komatsu","FD160E-8","16 ton","","","",1,711.3,708,0,"Faena minera Cerro Colorado",-20.040354,-69.260313,"2026-08-05","2026-12-20",0,0,0,"ARR-0109"],[0,"Komatsu","FD160E-8","16 ton","","","",0,5252.1,4930,-1,"Taller",-20.242759,-70.138763,"","",0,0,0,""],[5,"JCB","3CX","","","","",1,2045.0,1825,4,"Zofri, Iquique",-20.224915,-70.142666,"2026-10-12","2027-04-24",0,0,0,"ARR-0163"],[5,"JCB","3CX 4X4","","","","",0,873.7,553,-1,"Taller",-20.246914,-70.140912,"","",0,0,0,""],[5,"JCB","3CX 4X4","","","","",0,2226.8,2175,-1,"Taller",-20.246141,-70.137653,"","",0,0,0,""],[5,"JCB","3CX 4X4","","RCSZ64","","",3,8520.7,8129,-1,"Taller",-20.24528,-70.138618,"","",0,0,0,""],[0,"Komatsu","FD30T-17","3 ton","","","",2,6558.2,6286,-1,"Taller",-20.242698,-70.140338,"","",0,0,0,""],[0,"Komatsu","FD30T-17","3 ton","","","",0,4748.3,4701,-1,"Taller",-20.243514,-70.140407,"","",0,0,0,""],[0,"Komatsu","FD30T-17","3 ton","","","",1,2805.6,2802,4,"Zofri, Iquique",-20.225835,-70.132122,"2026-09-05","",0,0,0,"ARR-0133"],[0,"Komatsu","FD30T-17","3 ton","","","",0,6449.4,6376,-1,"Taller",-20.24263,-70.137129,"","",0,0,0,""],[0,"Komatsu","FD30T-17","3 ton","","","",3,2325.0,2278,-1,"Taller",-20.246049,-70.138365,"","",0,0,0,""],[12,"JCB","533-105 T","","","","",1,4401.0,4158,3,"Faena Pozo Almonte",-20.254927,-69.78491,"2026-05-05","",0,0,0,"ARR-0003"],[12,"JCB","533-105 T","","","","",1,1650.8,1276,4,"Zofri, Iquique",-20.215923,-70.140182,"2026-09-05","2027-02-22",0,0,0,"ARR-0134"],[0,"Komatsu","FD100-8","10 ton","","","",1,2393.5,2344,1,"Puerto de Iquique",-20.20586,-70.157185,"2026-08-24","",0,0,0,"ARR-0124"],[0,"Komatsu","FD160E-8","16 ton","","","",1,2004.3,1691,1,"Puerto de Iquique",-20.201098,-70.150275,"2026-10-22","2027-04-28",0,0,0,"ARR-0176"],[0,"Komatsu","FD160E-8","16 ton","","","",0,7658.7,7577,-1,"Taller",-20.244593,-70.140028,"","",0,0,0,""],[0,"Hangcha","CPCD-35","3.5 ton","","","",1,2738.5,2726,3,"Faena Pozo Almonte",-20.258584,-69.790915,"2026-08-26","",0,0,0,"ARR-0128"],[5,"JCB","3CX 4X4","","LPHL61","","",0,5148.3,4929,-1,"Taller",-20.24309,-70.140933,"","",0,0,0,""],[0,"Komatsu","FD160E-8","16 ton","","","",1,2270.5,2209,2,"Alto Hospicio",-20.263709,-70.100842,"2026-06-02","2026-12-19",0,0,0,"ARR-0025"],[5,"JCB","3CX 4X4","","","","",1,6002.0,5985,3,"Faena Pozo Almonte",-20.253006,-69.793696,"2026-09-19","2027-01-06",0,0,0,"ARR-0145"],[5,"JCB","3CX 4X4","","","","",1,2723.9,2499,1,"Puerto de Iquique",-20.207159,-70.158113,"2026-07-13","2027-01-15",0,0,0,"ARR-0074"],[5,"JCB","3CX 4X4","","","","",1,2705.3,2469,0,"Faena minera Cerro Colorado",-20.049708,-69.254609,"2026-10-14","2027-03-30",0,0,0,"ARR-0166"],[0,"Komatsu","FD160E-8","16 ton","","","",2,4648.0,4321,-1,"Taller",-20.243068,-70.140354,"","",0,0,0,""],[0,"Komatsu","FD160E-8","16 ton","","","",1,9065.9,8980,3,"Faena Pozo Almonte",-20.26281,-69.787626,"2026-09-12","2026-11-06",0,0,0,"ARR-0140"],[0,"Komatsu","FD160E-8","16 ton","","","",0,7423.2,7358,-1,"Taller",-20.245984,-70.139488,"","",0,0,0,""],[0,"Komatsu","FD70-10","7 ton","","","",0,7412.1,7327,-1,"Taller",-20.245645,-70.141562,"","",0,0,0,""],[0,"Komatsu","","3 ton","","","",1,4680.2,4531,3,"Faena Pozo Almonte",-20.261625,-69.784317,"2026-08-22","",0,0,0,"ARR-0120"],[16,"JCB","JS220LC","","","","",0,7861.4,7184,-1,"Taller",-20.244822,-70.139337,"","",0,0,0,""],[16,"JCB","JS220LC","","","","",3,6029.0,5830,-1,"Taller",-20.242575,-70.140727,"","",0,0,0,""],[0,"Komatsu","FD30T-17","3 ton","","","",1,2189.9,2054,1,"Puerto de Iquique",-20.200673,-70.156246,"2026-07-25","2026-12-02",0,0,0,"ARR-0092"],[13,"JCB","205 CAB AC","","","","",0,1917.2,1801,-1,"Taller",-20.245001,-70.140452,"","",0,0,0,""],[17,"Sany","SYL956H5","","","","",1,5829.1,5769,0,"Faena minera Cerro Colorado",-20.040338,-69.258715,"2026-06-28","",0,0,0,"ARR-0051"],[16,"JCB","JS220LC","","","","",2,1280.8,756,-1,"Taller",-20.243133,-70.138117,"","",0,0,0,""],[0,"Komatsu","FD30T-17","3 ton","","","",2,7353.2,7095,-1,"Taller",-20.243554,-70.141782,"","",0,0,0,""],[0,"Komatsu","FD30T-17","3 ton","","","",1,5080.5,5071,2,"Alto Hospicio",-20.26494,-70.09088,"2026-10-07","2027-04-06",0,0,0,"ARR-0157"],[5,"JCB","3CX 4X4","","","","",1,7773.7,7609,0,"Faena minera Cerro Colorado",-20.040113,-69.257709,"2026-07-23","2026-12-04",0,0,0,"ARR-0089"],[0,"Komatsu","FD30T-17","3 ton","","","",0,3267.4,3189,-1,"Taller",-20.245737,-70.138693,"","",0,0,0,""],[0,"Komatsu","FD30T-17","3 ton","","","",2,5737.4,5475,-1,"Taller",-20.244911,-70.140768,"","",0,0,0,""],[0,"Komatsu","FD30T-17","3 ton","","","",1,5324.5,5227,3,"Faena Pozo Almonte",-20.256602,-69.791793,"2026-09-03","2026-12-20",0,0,0,"ARR-0131"],[0,"Komatsu","FD30T-17","3 ton","","","",1,3112.0,3099,1,"Puerto de Iquique",-20.2059,-70.151602,"2026-08-07","",0,0,0,"ARR-0111"],[0,"Komatsu","FD30T-17","3 ton","","","",2,1947.5,1686,-1,"Taller",-20.245956,-70.138083,"","",0,0,0,""],[0,"Komatsu","FD30T-17","3 ton","","","",0,5178.7,5167,-1,"Taller",-20.244311,-70.139292,"","",0,0,0,""],[0,"Komatsu","FD30T-17","3 ton","","","",1,700.8,596,4,"Zofri, Iquique",-20.21725,-70.139616,"2026-09-13","2027-03-10",0,0,0,"ARR-0141"],[0,"Komatsu","FD30T-17","3 ton","","","",0,277.3,49,-1,"Taller",-20.245265,-70.137863,"","",0,0,0,""],[0,"Komatsu","FD30T-17","3 ton","","","",1,6737.2,6669,2,"Alto Hospicio",-20.2649,-70.092011,"2026-05-17","2026-11-04",0,0,0,"ARR-0014"],[0,"Komatsu","FD30T-17","3 ton","","","",1,7622.0,7519,4,"Zofri, Iquique",-20.220436,-70.142142,"2026-05-22","2026-12-20",0,0,0,"ARR-0019"],[0,"Komatsu","FD30T-17","3 ton","","","",1,1468.2,1359,2,"Alto Hospicio",-20.265434,-70.095399,"2026-07-26","2027-01-26",0,0,0,"ARR-0094"],[0,"Komatsu","FD30T-17","3 ton","","","",1,4578.7,4478,2,"Alto Hospicio",-20.27628,-70.092466,"2026-08-08","",0,0,0,"ARR-0112"],[0,"Komatsu","FD30T-17","3 ton","","","",0,3292.4,3285,-1,"Taller",-20.245969,-70.137801,"","",0,0,0,""],[16,"JCB","JS220LC","","","","",1,5823.9,5768,2,"Alto Hospicio",-20.266177,-70.092208,"2026-07-05","2027-01-07",0,0,0,"ARR-0060"],[0,"Hangcha","CPCD35 XW33CRT4","3.5 ton","","","",1,8363.0,8270,1,"Puerto de Iquique",-20.202364,-70.148038,"2026-08-17","2027-02-04",0,0,0,"ARR-0115"],[0,"Komatsu","FD250-7","25 ton","","","",1,9440.2,9428,0,"Faena minera Cerro Colorado",-20.042648,-69.255464,"2026-05-20","2027-01-25",0,0,0,"ARR-0017"],[5,"JCB","3CX","","","","",1,383.9,322,1,"Puerto de Iquique",-20.204009,-70.153378,"2026-07-08","2027-01-27",0,0,0,"ARR-0065"],[5,"JCB","3CX","","","","",0,1728.0,1549,-1,"Taller",-20.245766,-70.139902,"","",0,0,0,""],[0,"Komatsu","FD160E-8","16 ton","","","",0,8576.5,8329,-1,"Taller",-20.245477,-70.136835,"","",0,0,0,""],[0,"Komatsu","FD160E-8","16 ton","","","",2,1262.1,962,-1,"Taller",-20.245711,-70.136848,"","",0,0,0,""],[0,"Hangcha","CPCD50-RT4 4X4 3,6 AUT","5 ton","","","",1,4790.2,4488,1,"Puerto de Iquique",-20.209395,-70.148483,"2026-09-02","2026-12-14",0,0,0,"ARR-0130"],[0,"Hangcha","CPCD35 4X4 3,3AUT","3.5 ton","","","",0,2312.7,2183,-1,"Taller",-20.245364,-70.141213,"","",0,0,0,""],[0,"Hangcha","CPCD35 4X4 3,3AUT","3.5 ton","","","",0,317.7,93,-1,"Taller",-20.247283,-70.139236,"","",0,0,0,""],[13,"JCB","270 CAB AC","","","","",0,3049.2,3039,-1,"Taller",-20.24723,-70.141404,"","",1,0,0,""],[17,"JCB","455ZX","","","","",0,3358.3,3042,-1,"Taller",-20.242302,-70.141006,"","",0,0,0,""],[17,"JCB","455ZX","","","","",1,8582.8,8553,3,"Faena Pozo Almonte",-20.262266,-69.785607,"2026-10-20","2027-04-18",0,0,0,"ARR-0171"],[12,"JCB","533","","","","",0,2547.9,2127,-1,"Taller",-20.246693,-70.14001,"","",0,0,0,""],[13,"JCB","270 T3","","","","",0,5726.8,5621,-1,"Taller",-20.245403,-70.139226,"","",0,0,0,""],[0,"Bobcat","D1605-7","16 ton","","","",1,2458.0,2253,1,"Puerto de Iquique",-20.204928,-70.143654,"2026-06-12","2026-11-23",0,0,0,"ARR-0034"],[0,"Bobcat","D70S-9","7 ton","","","",1,3849.4,3651,3,"Faena Pozo Almonte",-20.256211,-69.791353,"2026-07-10","2026-12-07",0,0,0,"ARR-0070"],[5,"JCB","3CX 4X4","","","JCB3CX4TER3325888","",0,2345.0,1929,-1,"Taller",-20.245914,-70.138564,"","",0,0,0,""],[5,"JCB","3CX 4X4","","","JCB3CX4TPR3324034","",0,4336.7,4201,-1,"Taller",-20.246756,-70.140756,"","",0,0,0,""],[12,"JCB","540-170","","","","",0,1687.3,1679,-1,"Taller",-20.244136,-70.141607,"","",0,0,0,""],[0,"Konecranes","SMV25-1200C","25 ton","","","",1,5014.8,4941,1,"Puerto de Iquique",-20.201515,-70.147368,"2026-05-15","",0,0,0,"ARR-0013"],[0,"Konecranes","SMV25-1200C","25 ton","","","",0,8284.0,8212,-1,"Taller",-20.246964,-70.138347,"","",0,0,0,""],[13,"JCB","JCB270CAB_AC_CL","","","","",0,2793.9,2661,-1,"Taller",-20.246237,-70.140218,"","",0,0,0,""],[13,"JCB","JCB270CAB_AC_CL","","","","",1,294.8,217,3,"Faena Pozo Almonte",-20.251352,-69.7825,"2026-07-29","",0,0,0,"ARR-0097"],[0,"Hangcha","CPCD30-X2W97B1 4X2","3 ton","","","",0,4525.0,4322,-1,"Taller",-20.243793,-70.139898,"","",0,0,0,""],[0,"Hangcha","CPCD30-X2W97B1 4X2","3 ton","","","",1,2166.5,1980,2,"Alto Hospicio",-20.276558,-70.106038,"2026-09-26","2026-12-12",1,0,0,"ARR-0147"],[0,"Hangcha","CPCD35-QQ98CRT4 4X4","3.5 ton","","","",1,1377.4,1164,0,"Faena minera Cerro Colorado",-20.044769,-69.264842,"2026-06-02","2027-01-24",0,0,0,"ARR-0026"],[0,"Hangcha","CPCD50-RT4_CL","5 ton","","","",1,4377.7,4313,0,"Faena minera Cerro Colorado",-20.037362,-69.258261,"2026-09-30","",0,0,0,"ARR-0150"],[0,"Hangcha","CPCD50-RT4_CL","5 ton","","","",1,1665.2,1609,0,"Faena minera Cerro Colorado",-20.038025,-69.264514,"2026-07-21","2026-12-05",0,0,0,"ARR-0085"],[13,"JCB","JCB270CAB_AC_CL","","","","",0,7073.8,6982,-1,"Taller",-20.24523,-70.139098,"","",0,0,0,""],[0,"Komatsu","FH50-2","5 ton","","","",0,216.8,78,-1,"Taller",-20.243409,-70.137078,"","",0,0,0,""],[0,"Hangcha","CPCD100-XH16B","10 ton","","","",0,5693.8,5364,-1,"Taller",-20.242697,-70.140047,"","",0,0,0,""],[0,"Hangcha","CPD25-XEY2HA-SI_CL","2.5 ton eléctrica","","","",1,5511.9,5319,1,"Puerto de Iquique",-20.209692,-70.157211,"2026-06-25","2026-12-27",0,0,0,"ARR-0044"],[0,"Hangcha","CPQYD30-XRW22","3 ton a gas","","","",2,1053.1,727,-1,"Taller",-20.244773,-70.140204,"","",0,0,0,""],[0,"Hangcha","CPQYD30-XRW22","3 ton a gas","","","",0,8113.3,8033,-1,"Taller",-20.245617,-70.136958,"","",0,0,0,""],[0,"Komatsu","FH100-1","10 ton","","","",2,423.2,89,-1,"Taller",-20.24378,-70.137904,"","",0,0,0,""],[0,"Komatsu","FH100-1","10 ton","","","",1,1081.6,946,4,"Zofri, Iquique",-20.219297,-70.135355,"2026-07-26","2026-12-30",0,0,0,"ARR-0095"],[0,"Komatsu","FH160-1","16 ton","","","",1,6737.6,6698,3,"Faena Pozo Almonte",-20.260089,-69.781972,"2026-10-08","2026-12-12",0,0,0,"ARR-0159"],[4,"Mazda","NEW BT 50 DCAB SDX 4X4","","","","",1,230022,217283,2,"Alto Hospicio",-20.268934,-70.105065,"2026-09-17","2026-11-16",0,0,0,"ARR-0144"],[4,"Maxus","C35 C PLANA 2.0","","","","",1,235586,226861,0,"Faena minera Cerro Colorado",-20.039476,-69.262598,"2026-07-16","",0,0,0,"ARR-0078"],[4,"Dodge","RAM VAN 700 CITY","","","","",0,122148,121925,-1,"Taller",-20.244805,-70.139499,"","",1,0,0,""],[4,"Dodge","RAM VAN 700 CITY","","","","",0,39918,34509,-1,"Taller",-20.243521,-70.138747,"","",0,0,0,""],[23,"Hyundai","COUNTY","","","","",1,15360,11503,0,"Faena minera Cerro Colorado",-20.038793,-69.256755,"2026-06-27","2026-11-19",0,0,0,"ARR-0048"],[4,"Mitsubishi","L200 KATANA CRT 4X4 2.4","","","","",1,90363,86166,0,"Ruta 16, en tránsito",-20.049748,-69.264259,"2026-10-02","2026-12-18",0,1,1.219,"ARR-0151"],[4,"Mitsubishi","L200 KATANA CRT 4X4 2.4","","","","",0,153729,140526,-1,"Taller",-20.246742,-70.13941,"","",0,0,0,""],[4,"Dodge","RAM VAN 700 CITY","","","","",0,226926,224329,-1,"Taller",-20.247151,-70.140039,"","",0,0,0,""],[4,"Dodge","RAM VAN 700 CITY","","","","",1,35105,34990,2,"Alto Hospicio",-20.263155,-70.09102,"2026-05-07","2026-11-08",0,0,0,"ARR-0008"],[4,"Dodge","RAM VAN 700 CITY","","","","",0,189683,181223,-1,"Taller",-20.244718,-70.141582,"","",0,0,0,""],[4,"Dodge","RAM VAN 700 CITY","","","","",0,141946,137774,-1,"Taller",-20.246597,-70.137353,"","",0,0,0,""],[4,"Mitsubishi","L200 KATANA CRT 4X4 2.4","","","","",0,243658,240063,-1,"Taller",-20.243773,-70.137471,"","",0,0,0,""],[4,"Mitsubishi","L200 KATANA CRT 4X4 2.4","","","","",0,82635,76198,-1,"Taller",-20.24264,-70.138167,"","",0,0,0,""],[4,"Maxus","T90 4x4 AT","","","","",0,124594,117669,-1,"Taller",-20.244578,-70.141759,"","",0,0,0,""],[4,"Renault","DOKKER III","","","","",2,84532,73024,-1,"Taller",-20.243361,-70.139664,"","",0,0,0,""],[4,"Renault","DOKKER III","","","","",1,208147,202387,1,"Ruta 16, en tránsito",-20.211997,-70.149065,"2026-07-04","2026-12-15",0,1,2.134,"ARR-0059"],[4,"Renault","DOKKER III","","","","",0,255926,253527,-1,"Taller",-20.244879,-70.138104,"","",0,0,0,""],[4,"Renault","DOKKER III","","","","",1,69998,67898,3,"Faena Pozo Almonte",-20.262475,-69.784499,"2026-06-28","2026-12-26",0,0,0,"ARR-0052"],[4,"Toyota","HILUX D CAB 4X4 3.0","","","","",1,181430,173932,1,"Puerto de Iquique",-20.202506,-70.153024,"2026-09-11","2026-11-30",0,0,0,"ARR-0139"],[4,"Toyota","HILUX D CAB 4X4 3.0","","","","",1,126674,121380,3,"Ruta 16, en tránsito",-20.261028,-69.790013,"2026-05-04","2026-12-21",0,1,0.805,"ARR-0001"],[4,"Toyota","HILUX","","","","",1,258607,250363,3,"Faena Pozo Almonte",-20.256582,-69.78733,"2026-07-14","",0,0,0,"ARR-0077"],[4,"Toyota","HILUX D CAB 4X4 3.0","","","","",2,173004,159971,-1,"Taller",-20.246112,-70.138461,"","",0,0,0,""],[4,"Toyota","HILUX","","","","",0,136097,129380,-1,"Taller",-20.244999,-70.141067,"","",1,0,0,""],[24,"Hino","XZU 6.5DC","","","","",0,20052,12451,-1,"Taller",-20.242902,-70.140145,"","",0,0,0,""],[4,"Toyota","HILUX","","","","",2,161573,151048,-1,"Taller",-20.244546,-70.141244,"","",0,0,0,""],[4,"Toyota","HILUX","","","","",0,168540,166732,-1,"Taller",-20.24533,-70.137645,"","",0,0,0,""],[4,"Renault","DOKKER III","","","","",0,259752,253542,-1,"Taller",-20.243395,-70.139427,"","",1,0,0,""],[4,"Dodge","RAM TRUCK 2500 6.7L CUMMINS","","","","",1,165572,159606,1,"Puerto de Iquique",-20.203109,-70.144359,"2026-05-28","2026-11-04",0,0,0,"ARR-0022"],[4,"Dodge","RAM TRUCK 2500 6.7L CUMMINS","","","","",0,166363,161506,-1,"Taller",-20.245046,-70.139782,"","",0,0,0,""],[4,"Great Wall","WINGLE2,4 T/M 4X2","","","","",1,219912,217683,4,"Zofri, Iquique",-20.223921,-70.143815,"2026-10-18","2027-04-18",0,0,0,"ARR-0169"],[4,"Great Wall","POER PLUS AT 2,0","","","","",1,78228,77199,1,"Puerto de Iquique",-20.201711,-70.148767,"2026-07-06","2027-01-27",0,0,0,"ARR-0061"],[4,"Great Wall","WINGLE2,4 T/M 4X2","","","","",1,67174,67089,4,"Zofri, Iquique",-20.226841,-70.134634,"2026-10-29","2027-03-27",0,0,0,"ARR-0184"],[4,"Great Wall","WINGLE2,4 T/M 4X2","","","","",1,199858,186402,1,"Ruta 16, en tránsito",-20.199795,-70.149978,"2026-07-30","",0,1,1.323,"ARR-0100"],[4,"RAM","700 BIGHORN DC 1,3 CVT","","","","",1,136511,127206,1,"Puerto de Iquique",-20.207666,-70.151315,"2026-10-10","2027-02-03",0,0,0,"ARR-0160"],[4,"RAM","700 BIGHORN DC 1,3 CVT","","","","",1,98246,92047,4,"Zofri, Iquique",-20.225856,-70.135763,"2026-07-12","2026-12-02",0,0,0,"ARR-0071"],[4,"RAM","700 BIGHORN DC 1,3 CVT","","","","",0,252026,238922,-1,"Taller",-20.246666,-70.140223,"","",0,0,0,""],[4,"RAM","700 BIGHORN DC 1,3 CVT","","","","",2,142785,129333,-1,"Taller",-20.247029,-70.139067,"","",0,0,0,""],[4,"RAM","700 BIGHORN DC 1,3 CVT","","","","",2,249861,238482,-1,"Taller",-20.244334,-70.139566,"","",0,0,0,""],[4,"RAM","700 BIGHORN 1,3 AUT","","","","",2,184964,171775,-1,"Taller",-20.24584,-70.14038,"","",0,0,0,""],[4,"RAM","700 BIGHORN 1,3 AUT","","","","",3,143786,143114,-1,"Taller",-20.244321,-70.141362,"","",0,0,0,""],[4,"RAM","700 BIGHORN 1,3 AUT","","","","",2,247040,235665,-1,"Taller",-20.244152,-70.139487,"","",0,0,0,""],[4,"RAM","700 BIGHORN 1,3 AUT","","","","",1,5600,4273,2,"Alto Hospicio",-20.267359,-70.106251,"2026-08-04","2027-01-25",0,0,0,"ARR-0107"],[4,"RAM","700 BIGHORN 1,3 AUT","","","","",0,29179,20381,-1,"Taller",-20.247286,-70.140893,"","",1,0,0,""],[21,"","","","","","",0,31656,21030,-1,"Taller",-20.242975,-70.138255,"","",0,0,0,""],[21,"Maxus","E DELIVER 3 AUT","","","","",1,92103,79312,2,"Alto Hospicio",-20.267911,-70.101979,"2026-10-27","2026-12-04",0,0,0,"ARR-0181"],[18,"Genie","Z62/40","","","","",1,9427.3,9351,4,"Zofri, Iquique",-20.223513,-70.134119,"2026-05-06","",1,0,0,"ARR-0006"],[18,"Genie","Z - 45/25J RT 4X4","articulado 16 m","","","",0,4189.3,4183,-1,"Taller",-20.243008,-70.139286,"","",0,0,0,""],[18,"Genie","Z - 45/25J RT 4X4","articulado 16 m","","","",1,5668.7,5623,1,"Puerto de Iquique",-20.212617,-70.144023,"2026-07-21","2026-11-25",0,0,0,"ARR-0086"],[18,"Genie","Z - 45/25J RT 4X4","articulado 16 m","","","",1,5028.5,4851,0,"Faena minera Cerro Colorado",-20.052495,-69.265722,"2026-10-07","2027-01-25",0,0,0,"ARR-0158"],[18,"Genie","Z - 45/25J RT 4X4","articulado 16,5 m","","","",1,7142.2,7036,1,"Puerto de Iquique",-20.203788,-70.158197,"2026-07-19","2026-12-10",0,0,0,"ARR-0081"],[18,"Genie","Z80/60","articulado 25,77 m","","","",0,5995.3,5955,-1,"Taller",-20.242961,-70.141151,"","",0,0,0,""],[2,"Pramac","T.LED 1700K","","","","",0,2397.4,2100,-1,"Taller",-20.243335,-70.140492,"","",0,0,0,""],[2,"Pramac","T.LED 1700K","","","","",1,1662.3,1557,0,"Faena minera Cerro Colorado",-20.042933,-69.265388,"2026-08-24","2026-11-03",0,0,0,"ARR-0125"],[2,"Pramac","T.LED 1700K","","","","",0,3478.4,3350,-1,"Taller",-20.246004,-70.137974,"","",0,0,0,""],[2,"Pramac","T.LED 1700K","","","","",1,4236.9,3978,4,"Zofri, Iquique",-20.218367,-70.144439,"2026-05-21","2027-01-25",0,0,0,"ARR-0018"],[2,"Pramac","T.LED 1700K","","","","",0,2445.8,2368,-1,"Taller",-20.246224,-70.138083,"","",1,0,0,""],[1,"JCB","G220QX","220 kVA","","","",1,1738.9,1609,0,"Faena minera Cerro Colorado",-20.050762,-69.268068,"2026-10-04","2027-02-15",0,0,0,"ARR-0154"],[1,"JCB","G330QX","330 kVA","","","",1,5107.6,4944,4,"Zofri, Iquique",-20.21335,-70.137015,"2026-06-06","",0,0,0,"ARR-0028"],[1,"JCB","G90QX","90 kVA","","","",0,5741.1,5738,-1,"Taller",-20.244285,-70.137563,"","",0,0,0,""],[1,"JCB","G45QX","45 kVA","","","",0,8915.7,8679,-1,"Taller",-20.246001,-70.140467,"","",0,0,0,""],[1,"JCB","G90QX","90 kVA","","","",0,4808.0,4679,-1,"Taller",-20.245264,-70.137096,"","",0,0,0,""],[1,"JCB","G20QS","20 kVA","","","",1,4988.4,4785,4,"Zofri, Iquique",-20.218881,-70.141171,"2026-08-11","2027-01-14",0,0,0,"ARR-0113"],[1,"JCB","G45QS","45 kVA","","","",1,3549.5,3371,4,"Zofri, Iquique",-20.215186,-70.137209,"2026-10-11","2027-01-28",0,0,0,"ARR-0162"],[1,"JCB","G440QX","440 kVA","","","",1,6900.7,6792,0,"Faena minera Cerro Colorado",-20.052694,-69.261395,"2026-07-31","2026-12-15",0,0,0,"ARR-0101"],[1,"JCB","G440QX","440 kVA","","","",2,8132.5,7799,-1,"Taller",-20.242613,-70.137303,"","",0,0,0,""],[1,"JCB","G440QX","440 kVA","","","",0,5084.1,4903,-1,"Taller",-20.244721,-70.136844,"","",0,0,0,""],[1,"JCB","G45QS","45 kVA","","","",1,5882.7,5859,0,"Faena minera Cerro Colorado",-20.040124,-69.255838,"2026-10-02","2026-12-14",0,0,0,"ARR-0152"],[1,"JCB","G45QS","45 kVA","","","",1,9299.4,9248,1,"Puerto de Iquique",-20.201456,-70.150395,"2026-07-01","2026-11-02",0,0,0,"ARR-0054"],[1,"JCB","G440QX","440 kVA","","","",1,2251.4,1913,2,"Alto Hospicio",-20.267896,-70.101133,"2026-07-19","",0,0,0,"ARR-0082"],[1,"JCB","G20QS","20 kVA","","","",0,150.0,74,-1,"Taller",-20.246136,-70.140614,"","",0,0,0,""],[1,"JCB","G90QS","90 kVA","","","",1,7143.9,7003,1,"Puerto de Iquique",-20.21186,-70.147744,"2026-10-28","2027-02-21",0,0,0,"ARR-0182"],[1,"JCB","G115QS","115 kVA","","","",2,1412.2,1126,-1,"Taller",-20.243396,-70.139507,"","",0,0,0,""],[1,"JCB","G220QS","220 kVA","","","",0,6062.6,5937,-1,"Taller",-20.242324,-70.139824,"","",0,0,0,""],[1,"JCB","G115QS","115 kVA","","","",0,7398.9,7367,-1,"Taller",-20.242748,-70.140518,"","",0,0,0,""],[1,"JCB","G45QS","45 kVA","","","",1,4463.3,4265,1,"Puerto de Iquique",-20.200185,-70.154982,"2026-09-09","2026-12-24",0,0,0,"ARR-0137"],[1,"JCB","G90QS","90 kVA","","","",1,5030.2,5018,1,"Puerto de Iquique",-20.201453,-70.14659,"2026-08-05","2026-11-24",0,0,0,"ARR-0110"],[1,"JCB","G45QS","45 kVA","","","",0,7333.3,7249,-1,"Taller",-20.244131,-70.141256,"","",0,0,0,""],[1,"JCB","G115QS","115 kVA","","","",1,2700.5,2498,4,"Zofri, Iquique",-20.221811,-70.132321,"2026-08-18","2027-03-04",0,0,0,"ARR-0118"],[1,"JCB","G45QX","45 kVA","","","",0,6023.5,6018,-1,"Taller",-20.242933,-70.139205,"","",0,0,0,""],[1,"JCB","G220QS","220 kVA","","","",0,5936.8,5932,-1,"Taller",-20.242596,-70.139192,"","",0,0,0,""],[1,"JCB","G165QS","165 kVA","","","",1,7621.7,7415,0,"Faena minera Cerro Colorado",-20.052707,-69.260754,"2026-10-24","2026-12-21",0,0,0,"ARR-0178"],[1,"JCB","G165QS","165 kVA","","","",0,5786.6,5715,-1,"Taller",-20.246045,-70.138646,"","",0,0,0,""],[1,"JCB","G45QS","45 kVA","","","",2,9370.5,9021,-1,"Taller",-20.24489,-70.140287,"","",0,0,0,""],[1,"JCB","G45QS","45 kVA","","","",2,2623.3,2340,-1,"Taller",-20.24444,-70.137773,"","",0,0,0,""],[1,"JCB","G33QS","33 kVA","","","",2,2589.3,2303,-1,"Taller",-20.247222,-70.137027,"","",0,0,0,""],[1,"JCB","G33QS","33 kVA","","","",0,7038.8,6940,-1,"Taller",-20.242859,-70.138756,"","",0,0,0,""],[1,"JCB","G33QS","33 kVA","","","",0,1322.7,1209,-1,"Taller",-20.244224,-70.141755,"","",0,0,0,""],[1,"JCB","G33QS","33 kVA","","","",3,2900.3,2859,-1,"Taller",-20.244196,-70.140411,"","",0,0,0,""],[1,"JCB","G45QS","45 kVA","","","",1,807.8,796,4,"Zofri, Iquique",-20.226098,-70.138457,"2026-06-10","2026-12-14",0,0,0,"ARR-0031"],[1,"JCB","G221QS","221 kVA","","","",1,4235.3,4096,2,"Alto Hospicio",-20.268577,-70.095032,"2026-08-25","2026-12-03",0,0,0,"ARR-0126"],[1,"JCB","G221QS","221 kVA","","","",2,2243.3,1905,-1,"Taller",-20.242455,-70.139101,"","",0,0,0,""],[1,"JCB","G165QS","165 kVA","","","",0,5369.4,5336,-1,"Taller",-20.245675,-70.137481,"","",0,0,0,""],[1,"JCB","G141QS","141 kVA","","","",1,2863.0,2834,2,"Alto Hospicio",-20.263239,-70.092384,"2026-05-17","",0,0,0,"ARR-0015"],[1,"JCB","G166QS","166 kVA","","","",0,8837.9,8836,-1,"Taller",-20.245159,-70.141642,"","",0,0,0,""],[1,"JCB","G166QS","166 kVA","","","",0,8059.0,7918,-1,"Taller",-20.245734,-70.140508,"","",0,0,0,""],[1,"JCB","G66QS","66 kVA","","","",3,6591.7,6357,-1,"Taller",-20.245529,-70.140754,"","",0,0,0,""],[1,"JCB","G66QS","66 kVA","","","",2,5757.0,5413,-1,"Taller",-20.246881,-70.139934,"","",0,0,0,""],[1,"JCB","G141QS","141 kVA","","","",1,5459.0,5441,2,"Alto Hospicio",-20.26823,-70.099611,"2026-07-07","2026-11-28",0,0,0,"ARR-0064"],[1,"JCB","G91QS","91 kVA","","","",1,1287.3,1179,0,"Faena minera Cerro Colorado",-20.037199,-69.262943,"2026-05-31","2026-12-01",0,0,0,"ARR-0024"],[1,"JCB","G91QS","91 kVA","","","",3,853.2,849,-1,"Taller",-20.24289,-70.139546,"","",0,0,0,""],[1,"JCB","G41QS","41 kVA","","","",1,8859.0,8782,1,"Puerto de Iquique",-20.203335,-70.153494,"2026-10-21","2027-03-05",0,0,0,"ARR-0173"],[1,"JCB","G41QS","41 kVA","","","",0,8211.5,8157,-1,"Taller",-20.243145,-70.139677,"","",0,0,0,""],[1,"JCB","G41QS","41 kVA","","","",0,6947.1,6842,-1,"Taller",-20.244059,-70.141113,"","",0,0,0,""],[1,"Vielco","VIELCO TRIF GS11YLD","11 kVA","","","",1,1400.1,1279,2,"Alto Hospicio",-20.266484,-70.106571,"2026-06-06","",0,0,0,"ARR-0029"],[1,"Vielco","VIELCO TRIF GS11YLD","11 kVA","","","",1,4131.9,3907,0,"Faena minera Cerro Colorado",-20.047317,-69.254475,"2026-08-01","2027-01-20",0,0,0,"ARR-0102"],[1,"Vielco","VIELCO FAW TRIF GS22FLD","22 kVA","","","",1,2057.5,1815,3,"Faena Pozo Almonte",-20.257376,-69.779435,"2026-09-22","2027-02-14",0,0,0,"ARR-0146"],[1,"Vielco","VIELCO FAW TRIF GS22FLD","22 kVA","","","",1,8745.5,8553,2,"Alto Hospicio",-20.262908,-70.096766,"2026-07-24","2027-01-02",0,0,0,"ARR-0091"],[1,"Vielco","VIELCO FAW TRIF GS22FLD","22 kVA","","","",1,8453.5,8384,4,"Zofri, Iquique",-20.220072,-70.139398,"2026-06-20","2026-11-29",0,0,0,"ARR-0041"],[1,"JCB","G41QS","41 kVA","","","",0,1241.3,1119,-1,"Taller",-20.246726,-70.140224,"","",0,0,0,""],[1,"JCB","G41QS","41 kVA","","","",1,4414.5,4360,1,"Puerto de Iquique",-20.203849,-70.145456,"2026-06-25","2026-12-02",0,0,0,"ARR-0045"],[1,"JCB","G20QS","20 kVA","","","",2,944.5,609,-1,"Taller",-20.243472,-70.140855,"","",0,0,0,""],[1,"JCB","G141QS","137 kVA","","","",0,6625.7,6597,-1,"Taller",-20.245129,-70.139159,"","",0,0,0,""],[1,"JCB","G20QS","20 kVA","","","",2,7042.0,6692,-1,"Taller",-20.244862,-70.13978,"","",0,0,0,""],[6,"Sullair","","","","","",1,9261.7,9035,4,"Zofri, Iquique",-20.218593,-70.141017,"2026-10-18","2027-03-02",0,0,0,"ARR-0170"],[14,"Lincoln","VANTAGE 500","","","","",1,8547.4,8433,1,"Puerto de Iquique",-20.197732,-70.143654,"2026-07-22","2026-11-20",0,0,0,"ARR-0088"],[14,"Lincoln","VANTAGE 500","","","","",2,1120.6,807,-1,"Taller",-20.243293,-70.14023,"","",0,0,0,""],[14,"Lincoln","VANTAGE 500","","","","",0,7237.4,7106,-1,"Taller",-20.245679,-70.140936,"","",0,0,0,""],[14,"Lincoln","VANTAGE 500","","","","",2,7202.3,6907,-1,"Taller",-20.246657,-70.139548,"","",0,0,0,""],[14,"Lincoln","VANTAGE 500","","","","",1,7840.2,7708,4,"Zofri, Iquique",-20.221792,-70.131849,"2026-10-12","",0,0,0,"ARR-0164"],[14,"Lincoln","VANTAGE 500","","","","",0,7784.2,7687,-1,"Taller",-20.243719,-70.139535,"","",0,0,0,""],[2,"Wacker Neuson","LTV 6K","","","","",0,8809.6,8685,-1,"Taller",-20.243533,-70.141519,"","",0,0,0,""],[2,"Wacker Neuson","LTV 6K","","","","",0,4644.0,4504,-1,"Taller",-20.244484,-70.141652,"","",0,0,0,""],[2,"Allmand","NIGHT LITE PRO 212","","","","",1,638.9,614,0,"Faena minera Cerro Colorado",-20.04672,-69.254968,"2026-10-29","2027-03-15",0,0,0,"ARR-0185"],[2,"Wacker Neuson","LTV 6K","","","","",0,4808.0,4718,-1,"Taller",-20.2457,-70.138004,"","",0,0,0,""],[7,"Freightliner","M2 106","","","","",1,246156,242721,1,"Puerto de Iquique",-20.209198,-70.151885,"2026-07-01","2026-11-03",0,0,0,"ARR-0055"],[8,"","","","","","",1,7766.7,7390,1,"Puerto de Iquique",-20.209798,-70.148938,"2026-08-01","2027-01-04",0,0,0,"ARR-0103"],[25,"Mitsubishi","CANTER","","","","",1,198708,193750,3,"Ruta 16, en tránsito",-20.25835,-69.779896,"2026-07-16","2026-12-12",0,1,2.279,"ARR-0079"],[20,"Mercedes-Benz","ACTROS 3336","","","","",0,242231,236239,-1,"Taller",-20.244975,-70.137633,"","",0,0,0,""],[15,"Freightliner","M2 112 6X4","","","","",3,237159,234970,-1,"Taller",-20.242706,-70.138792,"","",0,0,0,""],[15,"Freightliner","M2 112 6X4","","","","",0,22222,12906,-1,"Taller",-20.245269,-70.140913,"","",0,0,0,""],[7,"Mercedes-Benz","ACTROS 4144K 8X4","","","","",1,244326,237241,1,"Puerto de Iquique",-20.207881,-70.152262,"2026-08-02","2027-01-20",0,0,0,"ARR-0104"],[8,"","","","","","",0,8152.7,7940,-1,"Taller",-20.24551,-70.137829,"","",0,0,0,""],[19,"Haulotte","","","","","",1,6852.6,6682,1,"Puerto de Iquique",-20.206044,-70.150629,"2026-10-23","2026-12-10",0,0,0,"ARR-0177"],[2,"Wacker Neuson","LTV 6K","","","","",0,3675.8,3582,-1,"Taller",-20.245246,-70.138078,"","",0,0,0,""],[7,"Freightliner","GWLW60","","","","",2,14938,3678,-1,"Taller",-20.244524,-70.140671,"","",1,0,0,""],[7,"Freightliner","M2 106 (CUMMINS)","","","","",3,88278,80772,-1,"Taller",-20.245981,-70.139555,"","",0,0,0,""],[8,"","","","","","",0,7087.0,7038,-1,"Taller",-20.245713,-70.140505,"","",0,0,0,""],[7,"Mercedes-Benz","ACTROS 4144K 8X4","","","","",1,155681,154993,3,"Faena Pozo Almonte",-20.251069,-69.792575,"2026-10-25","2027-04-29",0,0,0,"ARR-0180"],[8,"Palfinger","PK48002-EH","","","","",1,8885.8,8404,2,"Alto Hospicio",-20.269604,-70.094579,"2026-10-14","2027-03-31",0,0,0,"ARR-0167"],[7,"Freightliner","M2 112 DD13 EPA10","","","","",1,54049,51751,1,"Puerto de Iquique",-20.203789,-70.150901,"2026-10-28","2027-03-19",0,0,0,"ARR-0183"],[8,"","","","","","",2,2598.6,2079,-1,"Taller",-20.247191,-70.139357,"","",0,0,0,""],[7,"Freightliner","M2 112 DD13","","","","",0,173600,166595,-1,"Taller",-20.244078,-70.138391,"","",0,0,0,""],[8,"","","","","","",1,1347.5,1022,1,"Puerto de Iquique",-20.212241,-70.154307,"2026-08-13","",0,0,0,"ARR-0114"],[6,"Kaeser","M50 CL","","","","",2,2637.2,1947,-1,"Taller",-20.246944,-70.136875,"","",0,0,0,""],[6,"Kaeser","","","","","",1,6249.7,6083,4,"Zofri, Iquique",-20.216294,-70.139245,"2026-09-08","",0,0,0,"ARR-0136"],[6,"Kaeser","","","","","",2,5032.3,4357,-1,"Taller",-20.245144,-70.13782,"","",0,0,0,""],[7,"Freightliner","M2 106 CUMMINS","","","","",1,239760,229943,3,"Faena Pozo Almonte",-20.25338,-69.787447,"2026-09-27","2027-01-23",0,0,0,"ARR-0148"],[8,"","","","","","",1,2434.3,2221,1,"Puerto de Iquique",-20.197456,-70.156565,"2026-08-19","",0,0,0,"ARR-0119"],[20,"Mercedes-Benz","ACTROS 3336","","","","",1,118262,109731,4,"Zofri, Iquique",-20.226559,-70.130379,"2026-06-13","",0,0,0,"ARR-0036"],[26,"Mercedes-Benz","ATEGO 1726/54 EURO V","","","","",0,120446,112068,-1,"Taller",-20.246579,-70.141153,"","",0,0,0,""],[7,"Freightliner","M2 112 DD13 EPA","","","","",1,38104,33838,2,"Ruta 16, en tránsito",-20.267535,-70.102184,"2026-05-26","",0,1,1.58,"ARR-0021"],[8,"","","","","","",0,2108.9,1875,-1,"Taller",-20.246704,-70.140576,"","",1,0,0,""],[7,"Freightliner","SD 114","","","","",1,121423,120354,2,"Ruta 16, en tránsito",-20.261079,-70.096781,"2026-09-09","2026-11-08",1,1,2.295,"ARR-0138"],[8,"","","","","","",0,6694.5,6317,-1,"Taller",-20.246365,-70.136811,"","",0,0,0,""],[15,"Mercedes-Benz","AROCS 4848","","","","",0,45787,35933,-1,"Taller",-20.244691,-70.141012,"","",0,0,0,""],[15,"Mercedes-Benz","AROCS 4848","","","","",0,33684,25138,-1,"Taller",-20.244668,-70.141554,"","",0,0,0,""],[20,"Mercedes-Benz","AROCS 3342 K 3600 RET","","","","",0,59608,49792,-1,"Taller",-20.24729,-70.137603,"","",1,0,0,""],[15,"Mercedes-Benz","AROCS 4848","","","","",1,116604,113373,3,"Faena Pozo Almonte",-20.264792,-69.787069,"2026-06-29","2026-12-27",0,0,0,"ARR-0053"],[15,"Mercedes-Benz","AROCS 4848","","","","",3,98518,92121,-1,"Taller",-20.246127,-70.139103,"","",0,0,0,""],[9,"Hino","FD1121","","","","",0,249077,242982,-1,"Taller",-20.246518,-70.137208,"","",0,0,0,""],[6,"Kaeser","M100","","","","",1,7417.7,7088,2,"Alto Hospicio",-20.268724,-70.103236,"2026-07-20","2026-11-13",1,0,0,"ARR-0084"],[6,"Booniga","V2065-100L","","","","",2,6528.3,5867,-1,"Taller",-20.246974,-70.13689,"","",0,0,0,""],[6,"Kaeser","MOBILAIR M50 PE CL 7BAR","","","","",0,1677.7,1673,-1,"Taller",-20.244829,-70.139533,"","",0,0,0,""],[6,"Kaeser","MOBILAIR M50 PE CL 7BAR","","","","",1,6991.9,6807,1,"Puerto de Iquique",-20.213134,-70.147369,"2026-08-22","",0,0,0,"ARR-0121"],[6,"Kaeser","MOBILAIR M50","","","","",0,2694.9,2376,-1,"Taller",-20.245613,-70.137347,"","",0,0,0,""],[6,"Kaeser","MOBILAIR M50","","","","",1,5099.2,4816,0,"Faena minera Cerro Colorado",-20.041206,-69.258635,"2026-06-12","2026-11-25",0,0,0,"ARR-0035"],[6,"Kaeser","MOBILAIR M50","","","","",0,8253.8,8086,-1,"Taller",-20.243703,-70.140035,"","",0,0,0,""],[2,"Wacker Neuson","LTV 6K","","","","",1,2972.1,2872,3,"Faena Pozo Almonte",-20.251059,-69.784993,"2026-09-27","2027-03-25",0,0,0,"ARR-0149"],[2,"Wacker Neuson","LTV 6K","","","","",0,213.1,77,-1,"Taller",-20.24372,-70.139448,"","",0,0,0,""],[2,"Wacker Neuson","LTV 6K","","","","",1,3012.4,2893,4,"Zofri, Iquique",-20.22557,-70.135065,"2026-09-03","2027-03-16",0,0,0,"ARR-0132"],[2,"Wacker Neuson","LTV 6K","","","","",1,254.7,166,1,"Puerto de Iquique",-20.197228,-70.157809,"2026-06-04","2026-12-24",0,0,0,"ARR-0027"],[2,"Allmand","NIGHT LITE PRO II","","","","",0,3712.7,3711,-1,"Taller",-20.243722,-70.138567,"","",0,0,0,""],[2,"Allmand","NIGHT LITE PRO II","","","","",1,8670.7,8553,0,"Faena minera Cerro Colorado",-20.048924,-69.259555,"2026-07-13","2026-11-07",0,0,0,"ARR-0075"],[2,"Allmand","NIGHT LITE PRO II","","","","",1,8547.0,8445,1,"Puerto de Iquique",-20.203593,-70.15136,"2026-06-10","2026-11-05",0,0,0,"ARR-0032"],[2,"Allmand","NIGHT LITE PRO II","","","","",2,3916.2,3584,-1,"Taller",-20.243734,-70.140277,"","",0,0,0,""],[2,"Allmand","NIGHT LITE PRO II","","","","",1,1157.3,1134,4,"Zofri, Iquique",-20.220151,-70.142219,"2026-07-01","2026-11-18",0,0,0,"ARR-0056"],[2,"Allmand","NIGHT LITE PRO II","","","","",1,3336.9,3105,4,"Zofri, Iquique",-20.21794,-70.133614,"2026-09-05","",0,0,0,"ARR-0135"],[2,"Allmand","NIGHT LITE PRO II","","","","",1,1164.9,1106,1,"Puerto de Iquique",-20.207275,-70.157112,"2026-06-13","",0,0,0,"ARR-0037"],[2,"Allmand","NIGHT LITE PRO II","","","","",1,9455.8,9336,3,"Faena Pozo Almonte",-20.259713,-69.778469,"2026-05-30","2026-12-18",0,0,0,"ARR-0023"],[2,"Allmand","NIGHT LITE PRO II","","","","",1,5162.0,5059,4,"Zofri, Iquique",-20.225588,-70.134763,"2026-10-21","",0,0,0,"ARR-0174"],[2,"Doosan","LN LEK1.4-50HZ LED","","","","",1,2694.5,2639,0,"Faena minera Cerro Colorado",-20.040351,-69.255124,"2026-07-08","2026-12-19",0,0,0,"ARR-0066"],[2,"Doosan","LN LEK1.4-50HZ LED","","","","",0,6303.9,6175,-1,"Taller",-20.245102,-70.137924,"","",0,0,0,""],[2,"Doosan","LN LEK1.4-50HZ LED","","","","",0,7001.8,6859,-1,"Taller",-20.245708,-70.136966,"","",0,0,0,""],[2,"Doosan","LN LEK1.4-50HZ LED","","","","",1,4112.9,3980,3,"Faena Pozo Almonte",-20.250832,-69.790975,"2026-07-12","2027-01-19",0,0,0,"ARR-0072"],[2,"Doosan","LN LEK1.4-50HZ LED","","","","",0,6786.6,6763,-1,"Taller",-20.243184,-70.138085,"","",0,0,0,""],[2,"Doosan","LN LEK1.4-50HZ LED","","","","",0,7927.1,7912,-1,"Taller",-20.245921,-70.138318,"","",0,0,0,""],[2,"Doosan","LN LEK1.4-50HZ LED","","","","",1,1998.4,1911,0,"Faena minera Cerro Colorado",-20.038389,-69.262221,"2026-08-17","",0,0,0,"ARR-0116"],[2,"Doosan","LN LEK1.4-50HZ LED","","","","",1,5561.7,5519,3,"Faena Pozo Almonte",-20.262317,-69.779378,"2026-06-17","2026-12-11",0,0,0,"ARR-0039"],[2,"Doosan","LN LEK1.4-50HZ LED","","","","",1,7231.3,7136,2,"Alto Hospicio",-20.268655,-70.091713,"2026-08-04","2026-11-15",0,0,0,"ARR-0108"],[2,"Doosan","LN LEK1.4-50HZ LED","","","","",2,9316.8,9027,-1,"Taller",-20.245366,-70.141143,"","",0,0,0,""],[2,"Doosan","LN LEK1.4-50HZ LED","","","","",1,9213.5,9121,0,"Faena minera Cerro Colorado",-20.043896,-69.265437,"2026-06-24","2026-12-14",0,0,0,"ARR-0043"],[2,"Doosan","LN LEK1.4-50HZ LED","","","","",1,9480.4,9422,1,"Puerto de Iquique",-20.205439,-70.150791,"2026-07-12","2026-11-18",0,0,0,"ARR-0073"],[2,"Doosan","LN LEK1.4-50HZ LED","","","","",0,1163.0,1038,-1,"Taller",-20.243142,-70.137701,"","",0,0,0,""],[2,"Doosan","LN LEK1.4-50HZ LED","","","","",1,6614.0,6497,0,"Faena minera Cerro Colorado",-20.041413,-69.260176,"2026-06-13","2026-11-13",0,0,0,"ARR-0038"],[2,"Doosan","LN LEK1.4-50HZ LED","","","","",2,8370.4,8068,-1,"Taller",-20.245795,-70.137749,"","",0,0,0,""],[2,"Doosan","LN LEK1.4-50HZ LED","","","","",0,8785.6,8723,-1,"Taller",-20.246087,-70.139428,"","",0,0,0,""],[2,"Doosan","LN LEK1.4-50HZ LED","","","","",1,6236.1,6117,1,"Puerto de Iquique",-20.20844,-70.148807,"2026-06-17","2026-11-12",0,0,0,"ARR-0040"],[2,"Doosan","LN LEK1.4-50HZ LED","","","","",1,5576.4,5443,0,"Faena minera Cerro Colorado",-20.037427,-69.267797,"2026-05-18","2026-11-18",0,0,0,"ARR-0016"],[2,"Bobcat","LED PL50","","","","",1,5065.8,4819,2,"Alto Hospicio",-20.270214,-70.093669,"2026-08-17","2027-01-03",0,0,0,"ARR-0117"],[2,"Bobcat","LED PL50","","","","",1,3338.7,3221,0,"Faena minera Cerro Colorado",-20.04191,-69.265876,"2026-07-19","2026-11-28",0,0,0,"ARR-0083"],[2,"Bobcat","LED PL50","","","","",3,8019.9,7931,-1,"Taller",-20.244913,-70.139648,"","",0,0,0,""],[2,"Bobcat","LED PL50","","","","",0,4352.7,4068,-1,"Taller",-20.24723,-70.141452,"","",0,0,0,""],[2,"Bobcat","LED PL50","","","","",1,2625.1,2588,0,"Faena minera Cerro Colorado",-20.037541,-69.262441,"2026-07-06","2026-11-11",0,0,0,"ARR-0062"],[2,"Bobcat","LED PL50","","","","",1,1311.7,1187,0,"Faena minera Cerro Colorado",-20.043374,-69.264307,"2026-08-02","2027-01-22",0,0,0,"ARR-0105"],[2,"Bobcat","LED PL50","","","","",1,6330.4,6199,2,"Alto Hospicio",-20.276857,-70.103857,"2026-07-08","2027-01-01",0,0,0,"ARR-0067"],[2,"Bobcat","LED PL50","","","","",1,4029.4,3949,3,"Faena Pozo Almonte",-20.262818,-69.784591,"2026-05-09","",0,0,0,"ARR-0009"],[2,"Bobcat","LED PL50","","","","",0,1505.1,1404,-1,"Taller",-20.246414,-70.141039,"","",0,0,0,""],[2,"Bobcat","LED PL50","","","","",1,8395.8,8394,3,"Faena Pozo Almonte",-20.25534,-69.780035,"2026-07-09","2026-12-26",0,0,0,"ARR-0068"],[6,"Kaeser","SK22 8BAR","","","","",1,6641.3,6513,0,"Faena minera Cerro Colorado",-20.041712,-69.269217,"2026-07-25","2026-12-02",0,0,0,"ARR-0093"],[3,"Atlas Copco","SOLAR HILIGHT MS 5","","","","",2,8524.6,7160,-1,"Taller",-20.244448,-70.139956,"","",0,0,0,""],[3,"Atlas Copco","SOLAR HILIGHT MS 5","","","","",1,7605.0,7107,2,"Alto Hospicio",-20.275434,-70.101187,"2026-08-23","2026-12-14",0,0,0,"ARR-0122"],[3,"Atlas Copco","SOLAR HILIGHT MS 5","","","","",1,6269.8,5832,1,"Puerto de Iquique",-20.212181,-70.148238,"2026-07-29","",0,0,0,"ARR-0098"],[3,"Atlas Copco","SOLAR HILIGHT MS 5","","","","",1,6233.5,5730,0,"Faena minera Cerro Colorado",-20.041882,-69.266375,"2026-10-21","2027-04-30",0,0,0,"ARR-0175"],[3,"Atlas Copco","SOLAR HILIGHT MS 5","","","","",0,8623.1,7364,-1,"Taller",-20.243719,-70.139223,"","",0,0,0,""],[3,"Atlas Copco","SOLAR HILIGHT MS 5","","","","",2,1448.8,148,-1,"Taller",-20.244474,-70.138819,"","",0,0,0,""],[6,"","","","","","",0,485.7,322,-1,"Taller",-20.24719,-70.141149,"","",0,0,0,""],[27,"Mitsubishi Fuso","CANTER 815 EURO V DUONIC","5 ton","","","",1,30373,30119,0,"Faena minera Cerro Colorado",-20.048612,-69.255167,"2026-07-29","2026-11-09",0,0,0,"ARR-0099"],[7,"Mercedes-Benz","AROCS 3342","PK 33002 EH 6x4","","","",0,182267,169029,-1,"Taller",-20.243661,-70.141008,"","",0,0,0,""],[9,"Mitsubishi Fuso","CANTER 815 EURO V DUONIC","","","","",2,61763,50359,-1,"Taller",-20.246489,-70.14165,"","",0,0,0,""],[28,"Komatsu","GD675-6E0","","","","",0,6322.7,6266,-1,"Taller",-20.243605,-70.138957,"","",0,0,0,""],[11,"Freightliner","CL 120","","","","",2,189194,176415,-1,"Taller",-20.243455,-70.138875,"","",0,0,0,""],[11,"Freightliner","CL 120 6X4","","","","",0,119476,110981,-1,"Taller",-20.245501,-70.138583,"","",0,0,0,""],[9,"Hino","FC9JJSA","","","","",2,223240,209598,-1,"Taller",-20.246652,-70.13722,"","",1,0,0,""],[11,"Freightliner","SD 122","","","","",1,129767,121925,1,"Puerto de Iquique",-20.197313,-70.144614,"2026-06-21","2026-12-29",0,0,0,"ARR-0042"],[9,"Hino","FC9JJSA FULL","","","","",1,49598,47020,1,"Puerto de Iquique",-20.208802,-70.144536,"2026-07-23","2026-12-12",0,0,0,"ARR-0090"],[29,"Mitsubishi","CANTER 7,5","","","","",1,105737,105069,3,"Faena Pozo Almonte",-20.250931,-69.778626,"2026-10-06","",0,0,0,"ARR-0155"],[9,"Freightliner","M2 106 (CUMMINS)","","","","",0,130750,125643,-1,"Taller",-20.245763,-70.138116,"","",0,0,0,""],[9,"Hino","FC9JJTA FULL","","","","",1,127226,122021,4,"Zofri, Iquique",-20.219328,-70.142917,"2026-06-25","2026-12-28",0,0,0,"ARR-0046"],[11,"Freightliner","SD 122","","","","",1,99685,95826,4,"Zofri, Iquique",-20.218862,-70.141001,"2026-09-16","",0,0,0,"ARR-0142"],[11,"Freightliner","TRACTO NEW CA116 EPA","","","","",0,88093,74826,-1,"Taller",-20.245247,-70.137885,"","",0,0,0,""],[11,"Freightliner","TRACTO NEW CA116","","","","",1,106117,100396,0,"Ruta 16, en tránsito",-20.046868,-69.26521,"2026-06-08","2027-01-15",0,1,1.569,"ARR-0030"],[9,"Mercedes-Benz","NEW ACTROS 3358","","","","",1,232708,230124,3,"Faena Pozo Almonte",-20.25821,-69.789726,"2026-07-01","2026-11-08",0,0,0,"ARR-0057"],[9,"Hino","FD 1121","","","","",1,174348,173337,3,"Faena Pozo Almonte",-20.262963,-69.784529,"2026-07-06","2026-12-31",0,0,0,"ARR-0063"],[9,"Freightliner","SD114 PLUS SEG EURO V","","","","",0,229363,223783,-1,"Taller",-20.245975,-70.1391,"","",0,0,0,""],[11,"Freightliner","NEW CA116 60K DD13 505 DT12 SEG EURO V","","","","",0,100315,93194,-1,"Taller",-20.24351,-70.140375,"","",0,0,0,""],[11,"Freightliner","TRACTO NEW CA116 60K DD13 505 DT12 SEG EURO V","","","","",2,13458,777,-1,"Taller",-20.243503,-70.137105,"","",0,0,0,""],[10,"Tremac","","","","","",1,210517,191008,2,"Alto Hospicio",-20.271728,-70.094416,"2026-10-06","2026-11-19",0,0,0,"ARR-0156"],[1,"JCB","G165QS","165 kVA","","","",0,6939.9,6880,-1,"Taller",-20.244302,-70.13841,"","",0,0,0,""],[1,"JCB","G20QS","20 kVA","","","",1,8810.3,8703,2,"Alto Hospicio",-20.272622,-70.096924,"2026-06-11","2026-11-13",0,0,0,"ARR-0033"],[19,"Snorkel","S3246","","","","",1,6571.2,6544,4,"Zofri, Iquique",-20.218956,-70.135254,"2026-05-10","2027-01-26",0,0,0,"ARR-0010"],[1,"Hyundai","DHY8000SE","6 kVA","","","",1,7641.2,7594,4,"Zofri, Iquique",-20.213441,-70.140863,"2026-05-22","2026-12-31",0,0,0,"ARR-0020"],[1,"JCB","G545QX","545 kVA","","","",0,5929.5,5813,-1,"Taller",-20.242357,-70.140189,"","",0,0,0,""],[1,"JCB","G45QX","45 kVA","","","",1,9175.4,9069,2,"Alto Hospicio",-20.265463,-70.106039,"2026-10-03","2026-12-03",0,0,0,"ARR-0153"],[1,"Hyundai","DHY8000SE","6 kVA","","","",0,2709.4,2698,-1,"Taller",-20.243223,-70.136874,"","",0,0,0,""],[9,"JAC","URBAN HFC 1035","","","","",1,64981,55212,2,"Alto Hospicio",-20.268804,-70.090753,"2026-06-27","2026-11-19",0,0,0,"ARR-0049"],[19,"Haulotte","COMPACT 12","","","","",0,946.5,945,-1,"Taller",-20.246283,-70.137697,"","",0,0,0,""],[30,"Foton","AUMARK 814","","","","",0,118693,111827,-1,"Taller",-20.246147,-70.13851,"","",0,0,0,""],[18,"","","","","S8510-8415","",1,6439.4,6352,4,"Zofri, Iquique",-20.216819,-70.132382,"2026-07-18","2026-12-30",0,0,0,"ARR-0080"],[7,"Freightliner","M2 106 (DETROIT)","","","","",3,48062,34863,-1,"Taller",-20.246372,-70.141748,"","",0,0,0,""],[8,"","","","","","",0,7984.2,7959,-1,"Taller",-20.242562,-70.139097,"","",0,0,0,""],[19,"Hangcha","140XEN","eléctrica 14 m","","","",1,1564.0,1505,1,"Puerto de Iquique",-20.205278,-70.144797,"2026-05-05","2026-11-01",0,0,0,"ARR-0004"],[19,"Hangcha","140XEN","eléctrica 14 m","","","",1,3319.3,3109,0,"Faena minera Cerro Colorado",-20.05039,-69.260412,"2026-07-09","2026-11-15",0,0,0,"ARR-0069"],[2,"Atlas Copco","HILIGHT V5+KD 50HZROW SV2A NEO","","","","",0,8266.8,8221,-1,"Taller",-20.247049,-70.139045,"","",0,0,0,""],[2,"Atlas Copco","HILIGHT V5+KD 50HZROW SV2A NEO","","","","",1,2601.8,2502,4,"Zofri, Iquique",-20.213501,-70.140537,"2026-09-16","",0,0,0,"ARR-0143"],[2,"Atlas Copco","HILIGHT V5+KD 50HZROW SV2A NEO","","","","",0,9268.1,9153,-1,"Taller",-20.242776,-70.137383,"","",0,0,0,""],[2,"Atlas Copco","HILIGHT V5+KD 50HZROW SV2A NEO","","","","",1,9268.2,9178,2,"Alto Hospicio",-20.276135,-70.092093,"2026-07-03","2027-01-19",0,0,0,"ARR-0058"],[2,"Atlas Copco","HILIGHT V5+KD 50HZROW SV2A NEO","","","","",0,239.9,75,-1,"Taller",-20.243334,-70.137436,"","",0,0,0,""],[2,"Atlas Copco","HILIGHT V5+KD 50HZROW SV2A NEO","","","","",0,3098.0,2967,-1,"Taller",-20.24719,-70.141575,"","",0,0,0,""],[2,"Atlas Copco","HILIGHT V5+KD 50HZROW SV2A NEO","","","","",0,1838.6,1760,-1,"Taller",-20.243129,-70.140973,"","",0,0,0,""],[2,"Atlas Copco","HILIGHT V5+KD 50HZROW SV2A NEO","","","","",0,2689.3,2460,-1,"Taller",-20.246295,-70.139049,"","",0,0,0,""],[2,"Atlas Copco","HILIGHT V5+KD 50HZROW SV2A NEO","","","","",0,7057.2,7037,-1,"Taller",-20.243169,-70.14022,"","",0,0,0,""],[2,"Atlas Copco","HILIGHT V5+KD 50HZROW SV2A NEO","","","","",0,7120.9,7074,-1,"Taller",-20.247282,-70.138684,"","",0,0,0,""],[2,"Atlas Copco","HILIGHT V5+KD 50HZROW SV2A NEO","","","","",1,6714.2,6679,1,"Puerto de Iquique",-20.197785,-70.147718,"2026-10-16","2027-04-29",0,0,0,"ARR-0168"],[2,"Atlas Copco","HILIGHT V5+KD 50HZROW SV2A NEO","","","","",1,2971.4,2810,0,"Faena minera Cerro Colorado",-20.047507,-69.265496,"2026-10-20","2027-01-10",0,0,0,"ARR-0172"],[2,"Atlas Copco","HILIGHT V5+KD 50HZROW SV2A NEO","","","","",1,4016.8,3843,4,"Zofri, Iquique",-20.215717,-70.134463,"2026-06-26","",0,0,0,"ARR-0047"],[2,"Atlas Copco","HILIGHT V5+KD 50HZROW SV2A NEO","","","","",1,6535.7,6382,1,"Puerto de Iquique",-20.202573,-70.152948,"2026-06-27","2027-01-10",0,0,0,"ARR-0050"],[2,"Atlas Copco","HILIGHT V5+KD 50HZROW SV2A NEO","","","","",3,304.1,297,-1,"Taller",-20.244617,-70.1372,"","",0,0,0,""],[2,"Atlas Copco","HILIGHT V5+KD 50HZROW SV2A NEO","","","","",2,6704.0,6444,-1,"Taller",-20.246877,-70.141643,"","",0,0,0,""],[10,"Randon","SR CT PD 03 45","","","","",1,32488,14573,4,"Zofri, Iquique",-20.216123,-70.139562,"2026-05-14","2027-01-15",0,0,0,"ARR-0011"],[10,"Randon","SR CT PD 03 45","","","","",0,139845,136654,-1,"Taller",-20.244356,-70.139771,"","",0,0,0,""],[10,"Ledwell","LW48HTHT3","","","","",0,123885,123462,-1,"Taller",-20.246101,-70.136908,"","",0,0,0,""],[10,"Ledwell","LW48HTHT2","","","","",1,65896,46289,1,"Puerto de Iquique",-20.206661,-70.149803,"2026-05-05","2026-12-04",0,0,0,"ARR-0005"],[31,"Tremac","","cama baja","","","",1,49541,40603,1,"Puerto de Iquique",-20.212474,-70.144403,"2026-07-13","2027-01-05",0,0,0,"ARR-0076"],[10,"Tremac","SR PLANO 13.5 MTS","","","","",0,250593,250126,-1,"Taller",-20.244388,-70.139405,"","",0,0,0,""],[32,"Tremac","","","","","",0,256265,243389,-1,"Taller",-20.246743,-70.141481,"","",0,0,0,""],[10,"Goren","SRCB 3M 3516","","","","",0,131846,114571,-1,"Taller",-20.245398,-70.139705,"","",0,0,0,""],[10,"Goren","SRR 3 N 30 12 5","","","","",0,233220,220151,-1,"Taller",-20.245193,-70.14105,"","",0,0,0,""],[10,"Goren","","","","","",1,177882,157887,0,"Faena minera Cerro Colorado",-20.040008,-69.264176,"2026-10-13","2026-12-24",0,0,0,"ARR-0165"]],"ordenes":[[89867,"GH-001","2023-10-16",250,828,"CERRADA"],[90717,"GH-001","2023-11-29",1000,1083,"CERRADA"],[91902,"GH-001","2024-02-05",250,1325,"CERRADA"],[92935,"GH-001","2024-04-04",500,1575,"CERRADA"],[94281,"GH-001","2024-07-05",250,1803,"CERRADA"],[98470,"GH-001","2025-02-26",2000,2080,"CERRADA"],[100666,"GH-001","2025-06-26",250,2363,"CERRADA"],[102477,"GH-001","2025-10-01",500,2601,"CERRADA"],[105418,"GH-001","2026-03-13",500,2896,"CERRADA"],[106948,"GH-001","2026-05-29",1000,3157,"CERRADA"],[107001,"GH-004","2026-10-24",250,7381,"EN_EJECUCION"],[107002,"RC-001","2026-10-29",500,7656,"EN_EJECUCION"],[107003,"GH-012","2026-10-26",2000,4205,"EN_EJECUCION"],[107004,"GH-015","2026-11-05",250,4473,"PROGRAMADA"],[107005,"RE-002","2026-10-27",1000,5329,"EN_EJECUCION"],[107006,"GH-021","2026-11-03",500,1593,"PROGRAMADA"],[107007,"GH-023","2026-10-25",250,5424,"EN_EJECUCION"],[107008,"GH-025","2026-11-07",1000,5252,"PROGRAMADA"],[107009,"GH-026","2026-10-29",500,6558,"EN_EJECUCION"],[107010,"GH-036","2026-10-28",500,4648,"EN_EJECUCION"],[107011,"EX-002","2026-11-05",500,7861,"PROGRAMADA"],[107012,"EX-004","2026-10-26",1000,1281,"EN_EJECUCION"],[107013,"GH-042","2026-10-28",250,7353,"EN_EJECUCION"],[107014,"GH-045","2026-10-25",500,5737,"EN_EJECUCION"],[107015,"GH-048","2026-10-28",250,1948,"EN_EJECUCION"],[107016,"GH-060","2026-10-24",1000,1262,"EN_EJECUCION"],[107017,"GH-061","2026-11-03",500,4790,"PROGRAMADA"],[107018,"GH-074","2026-11-03",500,5694,"PROGRAMADA"],[107019,"GH-076","2026-10-25",250,1053,"EN_EJECUCION"],[107020,"GH-078","2026-10-29",250,423,"EN_EJECUCION"],[107021,"CT-006","2026-11-06",10000,153729,"PROGRAMADA"],[107022,"CT-014","2026-10-27",20000,84532,"EN_EJECUCION"],[107023,"CT-021","2026-10-29",20000,173004,"EN_EJECUCION"],[107024,"CT-023","2026-10-27",20000,161573,"EN_EJECUCION"],[107025,"CT-031","2026-11-03",10000,199858,"PROGRAMADA"],[107026,"CT-034","2026-10-31",20000,252026,"PROGRAMADA"],[107027,"CT-035","2026-10-24",10000,142785,"EN_EJECUCION"],[107028,"CT-036","2026-10-25",20000,249861,"EN_EJECUCION"],[107029,"CT-037","2026-10-25",20000,184964,"EN_EJECUCION"],[107030,"CT-039","2026-10-28",20000,247040,"EN_EJECUCION"],[107031,"FU-001","2026-11-07",10000,31656,"PROGRAMADA"],[107032,"GE-009","2026-10-25",2000,8132,"EN_EJECUCION"],[107033,"GE-016","2026-10-27",250,1412,"EN_EJECUCION"],[107034,"GE-027","2026-10-24",250,9370,"EN_EJECUCION"],[107035,"GE-028","2026-10-26",500,2623,"EN_EJECUCION"],[107036,"GE-029","2026-10-25",500,2589,"EN_EJECUCION"],[107037,"GE-035","2026-10-26",2000,2243,"EN_EJECUCION"],[107038,"GE-041","2026-10-24",500,5757,"EN_EJECUCION"],[107039,"GE-055","2026-10-27",250,944,"EN_EJECUCION"],[107040,"GE-057","2026-10-27",250,7042,"EN_EJECUCION"],[107041,"SO-002","2026-10-28",500,1121,"EN_EJECUCION"],[107042,"SO-004","2026-10-27",500,7202,"EN_EJECUCION"],[107043,"CP-003","2026-10-27",10000,14938,"EN_EJECUCION"],[107044,"PL-005","2026-10-24",500,2599,"EN_EJECUCION"],[107045,"CO-002","2026-10-24",1000,2637,"EN_EJECUCION"],[107046,"CO-004","2026-10-27",500,5032,"EN_EJECUCION"],[107047,"CO-006","2026-10-28",1000,6528,"EN_EJECUCION"],[107048,"LU-018","2026-10-28",250,3916,"EN_EJECUCION"],[107049,"LU-033","2026-10-29",250,9317,"EN_EJECUCION"],[107050,"LU-038","2026-10-27",250,8370,"EN_EJECUCION"],[107051,"LU-045","2026-11-07",250,4353,"PROGRAMADA"],[107052,"LS-001","2026-10-28",2000,8525,"EN_EJECUCION"],[107053,"LS-005","2026-11-08",2000,8623,"PROGRAMADA"],[107054,"LS-006","2026-10-24",1000,1449,"EN_EJECUCION"],[107055,"CP-011","2026-10-31",10000,182267,"PROGRAMADA"],[107056,"CA-002","2026-10-25",20000,61763,"EN_EJECUCION"],[107057,"TC-001","2026-10-24",20000,189194,"EN_EJECUCION"],[107058,"CA-003","2026-10-25",10000,223240,"EN_EJECUCION"],[107059,"TC-005","2026-11-08",20000,88093,"PROGRAMADA"],[107060,"TC-008","2026-10-29",10000,13458,"EN_EJECUCION"],[107061,"LU-067","2026-10-24",500,6704,"EN_EJECUCION"]]};
+
+// Pautas de insumos conocidas (las demás se cargan cuando la empresa las entregue)
+var PAUTAS = {
+    'Grúa horquilla': { 250: [['Aceite motor 15W40', '8 L'], ['Filtro aceite motor', '1'], ['Filtro combustible', '1'], ['Filtro aire exterior', '1'], ['Logo adhesivo mantención', '1']],
+                        1000: [['Aceite motor 15W40', '8 L'], ['Filtro aceite motor', '1'], ['Filtro combustible', '1'], ['Filtro aire exterior', '1'], ['Filtro aire interior', '1'], ['Logo adhesivo mantención', '1']] },
+    'Generador': { 250: INS_GEN([['Logo adhesivo mantención', '1'], ['Refrigerante', '10 L']]),          // planilla: pauta G45QX
+                   500: INS_GEN([['Correa ventilador JCB G45QX', '1'], ['Logo adhesivo mantención', '1']]),
+                   1000: INS_GEN([['Filtro aire interior', '1'], ['Logo adhesivo mantención', '1']]),
+                   2000: INS_GEN([['Filtro aire interior', '1'], ['Logo adhesivo mantención', '1']]) }
 };
+var PAUTA_MODELO = { 'Generador': 'G45QX' };   // la pauta del generador solo aplica al modelo G45QX
+var ESTADOS_IDX = ['DISPONIBLE', 'EN_FAENA', 'EN_MANTENIMIENTO', 'INTERNO'];
 
 var ESTADOS = {
     DISPONIBLE: { txt: 'Disponible', badge: 'badge-ok', color: '#157f3b' },
@@ -915,33 +919,32 @@ function siguienteArriendo() {
 /* =====================================================================
    ESTADO (se guarda en el navegador)
    ===================================================================== */
-var CLAVE = 'vilasmotor-maqueta-v4';
+var CLAVE = 'vilasmotor-maqueta-v5';   // v5: flota real del profesor
 var estado;
 
 function construirDesdeDatos() {
     var s = { tipos: [], equipos: [], ordenes: [], arriendos: [] };
-    estado = s;
-    DATOS.tipos.forEach(function (t, i) {
-        s.tipos.push({ id: i + 1, nombre: t.nombre, prefijo: generarPrefijo(t.nombre, s.tipos.map(function (x) { return x.prefijo; })),
-                       unidad: t.unidad, intervalos: t.intervalos.slice(), insumos: t.insumos || {}, creado: 0 });
+    estado = s; cacheTipos = null;
+    FLOTA.tipos.forEach(function (t, i) {
+        s.tipos.push({ id: i + 1, nombre: t.nombre, prefijo: t.prefijo, unidad: t.unidad, intervalos: t.intervalos.slice(),
+                       insumos: PAUTAS[t.nombre] || {}, pautaModelo: PAUTA_MODELO[t.nombre] || '', creado: 0 });
     });
-    var codigos = {};
-    DATOS.equipos.forEach(function (d, i) {
-        var id = i + 1, codigo = siguienteCodigo(tipoPorNombre(d.tipo).prefijo);
-        codigos[d.codigoAnterior] = codigo;
+    var cuenta = {}, ahora = Date.now();
+    FLOTA.equipos.forEach(function (d, i) {
+        var t = FLOTA.tipos[d[0]], id = i + 1;
+        cuenta[t.prefijo] = (cuenta[t.prefijo] || 0) + 1;
+        var codigo = t.prefijo + '-' + pad(cuenta[t.prefijo], 3), cliente = d[10] >= 0 ? FLOTA.clientes[d[10]] : '';
         s.equipos.push({
-            id: id, codigo: codigo, codigoAnterior: d.codigoAnterior || '', tipo: d.tipo,
-            nombre: nombreEquipo(d.tipo, d.marca, d.modelo, d.detalle), marca: d.marca, modelo: d.modelo, detalle: d.detalle || '',
-            patente: d.patente || '', estado: d.estado, horometro: d.horometro, ultimoServicio: d.ultimoServicio,
-            cliente: d.cliente || '', lugar: d.lugar, telemetria: telemetriaDe(id), lat: d.lat, lng: d.lng,
-            sinSenal: !!d.sinSenal, ruta: !!d.ruta, ultimaSenal: d.sinSenal ? Date.now() - 31 * 3600000 : Date.now(), velocidad: 0, rutaPos: 0, creado: 0
+            id: id, codigo: codigo, codigoAnterior: d[6], tipo: t.nombre, nombre: nombreEquipo(t.nombre, d[1], d[2], d[3]),
+            marca: d[1], modelo: d[2], detalle: d[3], patente: d[4], serie: d[5], estado: ESTADOS_IDX[d[7]],
+            horometro: d[8], ultimoServicio: d[9], cliente: cliente, lugar: d[11], telemetria: telemetriaDe(id), lat: d[12], lng: d[13],
+            sinSenal: !!d[16], ruta: !!d[17], rutaPos: d[18], ultimaSenal: d[16] ? ahora - 31 * 3600000 : ahora, velocidad: 0, creado: 0
         });
-        if (d.estado === 'EN_FAENA' && d.cliente) {
-            s.arriendos.push({ numero: 'ARR-' + pad(s.arriendos.length + 1), equipo: codigo, cliente: d.cliente, lugar: d.lugar, desde: d.desde, hasta: d.hasta || '', estado: 'VIGENTE', creado: 0 });
-        }
+        if (d[19]) s.arriendos.push({ numero: d[19], equipo: codigo, cliente: cliente, lugar: d[11], desde: d[14], hasta: d[15], estado: 'VIGENTE', creado: 0 });
     });
-    DATOS.ordenes.forEach(function (o) {
-        s.ordenes.push({ numero: o.numero, equipo: codigos[o.equipo] || o.equipo, fecha: o.fecha, servicio: o.servicio, horometro: o.horometro, estado: o.estado, creado: 0 });
+    s.arriendos.sort(function (a, b) { return a.numero < b.numero ? -1 : 1; });
+    FLOTA.ordenes.forEach(function (o) {
+        s.ordenes.push({ numero: o[0], equipo: o[1], fecha: o[2], servicio: o[3], horometro: o[4], estado: o[5], creado: 0 });
     });
     s.usuarios = semillaUsuarios();
     s.auditoria = semillaAuditoria(s);
@@ -962,7 +965,14 @@ function cargar() {
 }
 function guardar() { try { localStorage.setItem(CLAVE, JSON.stringify(estado)); } catch (e) {} }
 
-function tipoPorNombre(n) { return estado.tipos.filter(function (t) { return t.nombre === n; })[0]; }
+var cacheTipos = null;
+function tipoPorNombre(n) {
+    if (!cacheTipos || cacheTipos._n !== estado.tipos.length) {
+        cacheTipos = { _n: estado.tipos.length };
+        estado.tipos.forEach(function (t) { cacheTipos[t.nombre] = t; });
+    }
+    return cacheTipos[n];
+}
 function equipoPorCodigo(c) { return estado.equipos.filter(function (e) { return e.codigo === c; })[0]; }
 function arriendoVigente(c) { return estado.arriendos.filter(function (a) { return a.equipo === c && a.estado === 'VIGENTE'; })[0]; }
 function otAbierta(c) { return estado.ordenes.filter(function (o) { return o.equipo === c && o.estado !== 'CERRADA'; })[0]; }
@@ -979,7 +989,7 @@ function proximoServicio(e) {
     var restante = vence - e.horometro;
     return { servicio: servicio, vence: vence, restante: restante, base: base, unidad: t.unidad,
              estado: restante < 0 ? 'VENCIDO' : (restante <= UMBRAL[t.unidad] ? 'POR_VENCER' : 'AL_DIA'),
-             insumos: (t.insumos && (t.insumos[servicio] || t.insumos[base])) || [] };
+             insumos: (t.insumos && (!t.pautaModelo || String(e.modelo || '').toUpperCase().indexOf(t.pautaModelo) !== -1) && (t.insumos[servicio] || t.insumos[base])) || [] };
 }
 function haceCuanto(t) {
     var s = Math.max(0, (Date.now() - t) / 1000);
@@ -1043,7 +1053,7 @@ function pasa(e, ignorar) {
     }
     if (filtro.q && ignorar.indexOf('q') === -1) {
         var q = sinTildes(filtro.q.toLowerCase());
-        if (sinTildes([idTxt(e.id), e.codigo, e.codigoAnterior, e.nombre, e.patente, e.lugar, e.cliente].join(' ').toLowerCase()).indexOf(q) === -1) return false;
+        if (sinTildes([idTxt(e.id), e.codigo, e.codigoAnterior, e.nombre, e.patente, e.serie, e.lugar, e.cliente].join(' ').toLowerCase()).indexOf(q) === -1) return false;
     }
     return true;
 }
@@ -1065,40 +1075,65 @@ function opcionesDe(k) {
     return vals.map(function (v) { return { v: v, n: cuenta[v] }; });
 }
 
+var panelFiltros = {};   // "Más filtros" abierto o cerrado en cada pantalla
+var LUPA = '<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>';
 function pintarBarraFiltros(vista) {
     var cont = document.querySelector('.barra-filtros[data-vista="' + vista + '"]');
     if (!cont) return;
+    var secundarios = CAMPOS.filter(function (c) { return c.k !== 'estado'; });
     if (!cont.dataset.listo) {
-        cont.innerHTML = '<div class="filtros-fila">' + CAMPOS.map(function (c) {
-            return '<div class="filtro-campo"><label>' + c.label + '<select data-fd="' + c.k + '"></select></label></div>';
-        }).join('') + '<div class="filtro-campo"><label>Buscar<input data-fd="q" type="search" placeholder="ID, código, patente, lugar…"></label></div></div>' +
-            '<div class="filtros-pie"><span class="fd-resumen"></span><button class="btn btn-secondary btn-chico toggle-filtros" data-toggle-filtros>Filtrar</button><div class="chips-activos"></div></div>';
-        cont.querySelectorAll('label').forEach(function (l) { l.style.display = 'block'; l.style.fontFamily = 'var(--display)'; });
+        cont.innerHTML =
+            '<div class="fb-fila">' +
+                '<div class="fb-buscar">' + LUPA + '<input data-fd="q" type="search" aria-label="Buscar equipo" placeholder="Buscar por ID, código, patente o lugar…"></div>' +
+                '<div class="fb-rapidos" role="group" aria-label="Filtrar por estado"></div>' +
+                '<button type="button" class="fb-mas" data-mas-filtros aria-expanded="false">Más filtros <span class="cuenta-filtros" hidden></span><span class="flecha" aria-hidden="true">▾</span></button>' +
+            '</div>' +
+            '<div class="fb-panel" hidden>' + secundarios.map(function (c) {
+                return '<div class="filtro-campo"><label>' + c.label + '<select data-fd="' + c.k + '"></select></label></div>';
+            }).join('') + '</div>' +
+            '<div class="fb-pie" hidden><span class="fd-resumen"></span><div class="chips-activos"></div></div>';
         cont.dataset.listo = '1';
     }
-    CAMPOS.forEach(function (c) {
-        var sel = cont.querySelector('select[data-fd="' + c.k + '"]');
-        var ops = opcionesDe(c.k);
+    // Botones rápidos de estado con su cantidad
+    var opsEstado = opcionesDe('estado'), total = opsEstado.reduce(function (t, o) { return t + o.n; }, 0);
+    var rapidos = '<button type="button" class="fb-rapido" data-estado-rapido="" aria-pressed="' + (!filtro.estado) + '">Todos <span class="n">' + total + '</span></button>' +
+        opsEstado.map(function (o) {
+            return '<button type="button" class="fb-rapido" data-estado-rapido="' + o.v + '" aria-pressed="' + (filtro.estado === o.v) + '"><span class="punto" style="background:' + ESTADOS[o.v].color + '"></span>' + ESTADOS[o.v].txt + ' <span class="n">' + o.n + '</span></button>';
+        }).join('');
+    var r = cont.querySelector('.fb-rapidos');
+    if (r.dataset.html !== rapidos && !r.contains(document.activeElement)) { r.innerHTML = rapidos; r.dataset.html = rapidos; }
+    // Filtros del panel
+    secundarios.forEach(function (c) {
+        var sel = cont.querySelector('select[data-fd="' + c.k + '"]'), ops = opcionesDe(c.k);
         var html = '<option value="">' + c.todos + '</option>' + ops.map(function (o) {
             return '<option value="' + esc(o.v) + '"' + (o.v === filtro[c.k] ? ' selected' : '') + '>' + esc(textoValor(c.k, o.v)) + ' (' + o.n + ')</option>';
         }).join('');
-        if (filtro[c.k] && !ops.some(function (o) { return o.v === filtro[c.k]; })) {
-            html += '<option value="' + esc(filtro[c.k]) + '" selected>' + esc(textoValor(c.k, filtro[c.k])) + ' (0)</option>';
-        }
+        if (filtro[c.k] && !ops.some(function (o) { return o.v === filtro[c.k]; })) html += '<option value="' + esc(filtro[c.k]) + '" selected>' + esc(textoValor(c.k, filtro[c.k])) + ' (0)</option>';
         if (sel.dataset.html !== html && document.activeElement !== sel) { sel.innerHTML = html; sel.dataset.html = html; }
         sel.closest('.filtro-campo').classList.toggle('activo', !!filtro[c.k]);
     });
+    var enPanel = secundarios.filter(function (c) { return filtro[c.k]; }).length;
+    var abierto = !!panelFiltros[vista];
+    cont.querySelector('.fb-panel').hidden = !abierto;
+    var mas = cont.querySelector('[data-mas-filtros]'), cuenta = mas.querySelector('.cuenta-filtros');
+    mas.setAttribute('aria-expanded', abierto);
+    cuenta.hidden = !enPanel; cuenta.textContent = enPanel;
     var q = cont.querySelector('input[data-fd="q"]');
     if (document.activeElement !== q) q.value = filtro.q;
-    var n = equiposFiltrados().length, total = estado.equipos.length, act = filtrosActivos();
-    cont.querySelector('.fd-resumen').innerHTML = act.length ? 'Filtrando: <b>' + n + '</b> de ' + total + ' equipos' : 'Sin filtros: <b>' + total + '</b> equipos';
-    cont.querySelector('.chips-activos').innerHTML = act.map(function (k) {
-        return '<button class="chip-activo" data-quitar-fd="' + k + '">' + ETIQUETA[k] + ': ' + esc(textoValor(k, filtro[k])) + ' <span>✕</span></button>';
-    }).join('') + (act.length ? '<button class="link-btn" data-quitar-fd="todo">Limpiar filtros</button>' : '');
+    // Pie: solo aparece cuando hay filtros puestos
+    var act = filtrosActivos(), pie = cont.querySelector('.fb-pie');
+    pie.hidden = !act.length;
+    if (act.length) {
+        cont.querySelector('.fd-resumen').innerHTML = 'Mostrando <b>' + equiposFiltrados().length + '</b> de ' + estado.equipos.length + ' equipos';
+        cont.querySelector('.chips-activos').innerHTML = act.map(function (k) {
+            return '<button class="chip-activo" data-quitar-fd="' + k + '" aria-label="Quitar filtro ' + ETIQUETA[k] + '">' + ETIQUETA[k] + ': ' + esc(textoValor(k, filtro[k])) + ' <span>✕</span></button>';
+        }).join('') + '<button class="link-btn" data-quitar-fd="todo">Limpiar filtros</button>';
+    }
 }
 function cambiarFiltro(k, v) {
     if (k === 'todo') Object.keys(filtro).forEach(function (x) { filtro[x] = ''; }); else filtro[k] = v;
     Object.keys(mapas).forEach(function (m) { mapas[m]._ajustado = false; });
+    limite = { flota: PASO.flota, pron: PASO.pron, ordenes: PASO.ordenes }; clientesAbiertos = {};
     repintar();
 }
 
@@ -1106,6 +1141,13 @@ function cambiarFiltro(k, v) {
    VISTAS
    ===================================================================== */
 var vistaActual = 'dashboard', modoFlota = 'tabla', filtroOT = 'ABIERTAS', recien = null;
+// Con 395 equipos las tablas se muestran por partes: "Mostrar más" agrega otro bloque
+var PASO = { flota: 50, pron: 10, ordenes: 50, cliente: 8 };
+var limite = { flota: 50, pron: 10, ordenes: 50 }, clientesAbiertos = {};
+function filaMas(cols, quedan, clave) {
+    if (quedan <= 0) return '';
+    return '<tr class="fila-mas"><td colspan="' + cols + '"><button class="btn btn-secondary btn-chico" data-mas="' + clave + '">Mostrar ' + Math.min(quedan, PASO[clave] || 50) + ' más</button> <span class="codigo-ant" style="display:inline">quedan ' + quedan + '</span></td></tr>';
+}
 
 // destino al tocar un número: {vista, set:{campo:valor}, ot}
 function ir(dest) { return esc(JSON.stringify(dest)); }
@@ -1143,11 +1185,13 @@ function pintarDashboard() {
     var filas = eq.map(function (e) { return { e: e, p: proximoServicio(e) }; }).sort(function (a, b) {
         return (orden[a.p.estado] - orden[b.p.estado]) || ((a.p.restante || 0) - (b.p.restante || 0));
     });
+    var totalFilas = filas.length;
+    filas = filas.slice(0, limite.pron);
     document.getElementById('tabla-pronostico').innerHTML = filas.map(function (x) {
         return '<tr class="clic" data-equipo="' + esc(x.e.codigo) + '"><td>' + celdaId(x.e) + '</td><td>' + celdaCodigo(x.e) + '</td><td>' + esc(x.e.tipo) + '</td><td>' +
             (x.p.servicio ? 'Servicio ' + fmt(x.p.servicio) + ' ' + unidadCorta(x.p.unidad) : '—') + (otAbierta(x.e.codigo) ? ' <span class="badge badge-neutral">OT abierta</span>' : '') +
             '</td><td>' + celdaRestante(x.p) + '</td><td>' + badge(MANT, x.p.estado) + '</td></tr>';
-    }).join('') || '<tr><td colspan="6" class="vacio">Ningún equipo coincide con los filtros.</td></tr>';
+    }).join('') + filaMas(6, totalFilas - filas.length, 'pron') || '<tr><td colspan="6" class="vacio">Ningún equipo coincide con los filtros.</td></tr>';
     asegurarMapa('mapa-dash', 'dash', eq);
 }
 function kpi(label, valor, dest, extra) {
@@ -1164,13 +1208,13 @@ function pintarFlota() {
     pintarBarraFiltros('flota');
     var lista = equiposFiltrados();
     document.getElementById('contador-flota').innerHTML = '<b>' + lista.length + '</b> equipo' + (lista.length === 1 ? '' : 's');
-    document.getElementById('tabla-flota').innerHTML = lista.map(function (e) {
+    document.getElementById('tabla-flota').innerHTML = lista.slice(0, limite.flota).map(function (e) {
         var t = tipoPorNombre(e.tipo), s = senal(e);
         return '<tr class="clic' + (recien === e.codigo ? ' recien' : '') + '" data-equipo="' + esc(e.codigo) + '"><td>' + celdaId(e) + '</td><td>' + celdaCodigo(e) + '</td><td>' + esc(e.nombre) +
             (e.patente ? '<span class="codigo-ant">Patente ' + esc(e.patente) + '</span>' : '') + '</td><td>' + celdaUbicacion(e) + '<span class="codigo-ant"><span class="senal ' + s.clase + '">' + s.txt + '</span></span>' +
             '</td><td class="horas">' + fmt(e.horometro, t.unidad === 'KM' ? 0 : 1) + ' ' + unidadCorta(t.unidad) + '</td><td>' + badge(MANT, proximoServicio(e).estado) +
             '</td><td>' + badge(ESTADOS, e.estado) + '</td></tr>';
-    }).join('') || '<tr><td colspan="7" class="vacio">Ningún equipo coincide con los filtros. <button class="link-btn" data-quitar-fd="todo">Limpiar filtros</button></td></tr>';
+    }).join('') + filaMas(7, lista.length - limite.flota, 'flota') || '<tr><td colspan="7" class="vacio">Ningún equipo coincide con los filtros. <button class="link-btn" data-quitar-fd="todo">Limpiar filtros</button></td></tr>';
     document.getElementById('mapa-lista').innerHTML = lista.map(function (e) {
         return '<div class="mapa-item' + (seleccionMapa === e.codigo ? ' sel' : '') + '" data-foco="' + esc(e.codigo) + '"><span class="pin" style="background:' + ESTADOS[e.estado].color + '"></span><div><span class="codigo">' + esc(e.codigo) + '</span> <span class="id-equipo">' + idTxt(e.id) + '</span><small>' + esc(e.lugar) + '</small></div><span class="senal ' + senal(e).clase + '"></span></div>';
     }).join('') || '<div class="vacio">Sin resultados.</div>';
@@ -1186,7 +1230,8 @@ function pintarArriendos() {
     var disp = contar({ estado: 'DISPONIBLE' }).sort(function (a, b) { return b.id - a.id; });
     document.getElementById('barra-arriendos').innerHTML =
         '<div class="barra-acciones"><div class="info"><b>' + disp.length + '</b> equipo' + (disp.length === 1 ? '' : 's') + ' disponible' + (disp.length === 1 ? '' : 's') + ' para arrendar' +
-        (disp.length ? '<div class="disponibles">' + disp.map(function (e) { return '<button data-arrendar="' + esc(e.codigo) + '" title="' + esc(e.nombre) + '">' + esc(e.codigo) + '</button>'; }).join('') + '</div>'
+        (disp.length ? '<div class="disponibles">' + disp.slice(0, 30).map(function (e) { return '<button data-arrendar="' + esc(e.codigo) + '" title="' + esc(e.nombre) + '">' + esc(e.codigo) + '</button>'; }).join('') +
+            (disp.length > 30 ? '<button data-ir-a="' + ir({ vista: 'flota', set: { estado: 'DISPONIBLE' } }) + '">Ver los ' + disp.length + ' →</button>' : '') + '</div>'
                      : '<div class="codigo-ant">Agrega maquinaria o termina un arriendo para liberar equipos.</div>') +
         '</div><div class="herramientas"><button class="btn btn-secondary" data-crear="equipo">+ Agregar maquinaria</button><button class="btn btn-primary" data-crear="arriendo"' + (disp.length ? '' : ' disabled') + '>+ Nuevo arriendo</button></div></div>';
     var enFaena = contar({ estado: 'EN_FAENA' });
@@ -1199,12 +1244,14 @@ function pintarArriendos() {
     var clientes = Object.keys(grupos).sort(function (a, b) { return grupos[b][0].n - grupos[a][0].n; });
     document.getElementById('lista-arriendos').innerHTML = clientes.map(function (c) {
         return '<section class="panel cliente-bloque"><div class="panel-encabezado"><h2>' + esc(c) + '</h2><span class="contador"><b>' + grupos[c].length + '</b> equipo' + (grupos[c].length === 1 ? '' : 's') + '</span></div><div class="panel-cuerpo"><table><thead><tr><th>Arriendo</th><th>ID</th><th>Equipo</th><th>Período</th><th>Ubicación GPS</th><th>Señal</th></tr></thead><tbody>' +
-            grupos[c].map(function (x) {
+            grupos[c].slice(0, clientesAbiertos[c] ? grupos[c].length : PASO.cliente).map(function (x) {
                 var e = x.e, a = x.a, s = senal(e);
                 return '<tr class="clic' + (a && recien === a.numero ? ' recien' : '') + '" data-equipo="' + esc(e.codigo) + '"><td>' + (a ? '<span class="codigo">' + a.numero + '</span>' + (esNuevo(a) ? NUEVO : '') : '—') +
                     '</td><td>' + celdaId(e) + '</td><td>' + celdaCodigo(e) + '<span class="codigo-ant">' + esc(e.nombre) + '</span></td><td>' + (a ? fechaCL(a.desde) + ' → ' + (a.hasta ? fechaCL(a.hasta) : 'sin fecha') : '—') +
                     '</td><td>' + celdaUbicacion(e).replace(/<span class="codigo-ant">[^<]*<\/span>$/, '') + '<span class="codigo-ant">' + e.lat.toFixed(4) + ', ' + e.lng.toFixed(4) + '</span></td><td><span class="senal ' + s.clase + '">' + s.txt + '</span></td></tr>';
-            }).join('') + '</tbody></table></div></section>';
+            }).join('') + (!clientesAbiertos[c] && grupos[c].length > PASO.cliente
+                ? '<tr class="fila-mas"><td colspan="6"><button class="btn btn-secondary btn-chico" data-mas-cliente="' + esc(c) + '">Ver los ' + grupos[c].length + ' equipos de este cliente</button></td></tr>' : '') +
+            '</tbody></table></div></section>';
     }).join('') || '<div class="panel vacio">No hay equipos arrendados que coincidan con los filtros.</div>';
 }
 
@@ -1219,13 +1266,13 @@ function pintarOrdenes() {
     document.querySelectorAll('#filtros-ot .filtro').forEach(function (b) { b.classList.toggle('activo', b.dataset.ot === filtroOT); });
     var lista = ordenesFiltradas();
     document.getElementById('contador-ot').innerHTML = '<b>' + lista.length + '</b> orden' + (lista.length === 1 ? '' : 'es');
-    document.getElementById('tabla-ordenes').innerHTML = lista.map(function (o) {
+    document.getElementById('tabla-ordenes').innerHTML = lista.slice(0, limite.ordenes).map(function (o) {
         var e = equipoPorCodigo(o.equipo), u = e ? unidadCorta(tipoPorNombre(e.tipo).unidad) : '';
         var acc = o.estado === 'PROGRAMADA' ? '<button class="btn btn-secondary btn-chico" data-ot-iniciar="' + o.numero + '">Iniciar</button>'
                 : o.estado === 'EN_EJECUCION' ? '<button class="btn btn-primary btn-chico" data-ot-cerrar="' + o.numero + '">Cerrar OT</button>' : '';
         return '<tr class="clic' + (recien === 'OT' + o.numero ? ' recien' : '') + '" data-equipo="' + esc(o.equipo) + '"><td><span class="codigo">OT ' + o.numero + '</span>' + (esNuevo(o) ? NUEVO : '') + '</td><td>' + (e ? celdaCodigo(e) + '<span class="codigo-ant">' + idTxt(e.id) + '</span>' : esc(o.equipo)) +
             '</td><td>Servicio ' + fmt(o.servicio) + ' ' + u + '</td><td>' + fechaCL(o.fecha) + '</td><td class="horas">' + fmt(o.horometro) + ' ' + u + '</td><td>' + badge(ESTADOS_OT, o.estado) + '</td><td>' + acc + '</td></tr>';
-    }).join('') || '<tr><td colspan="7" class="vacio">No hay órdenes en esta vista.</td></tr>';
+    }).join('') + filaMas(7, lista.length - limite.ordenes, 'ordenes') || '<tr><td colspan="7" class="vacio">No hay órdenes en esta vista.</td></tr>';
 }
 
 function pintarTipos() {
@@ -1233,7 +1280,7 @@ function pintarTipos() {
     document.getElementById('tipos-grid').innerHTML = tipos.map(function (t) {
         var n = estado.equipos.filter(function (e) { return e.tipo === t.nombre; }).length, u = unidadCorta(t.unidad);
         var ins = Object.keys(t.insumos || {}).map(function (k) {
-            return '<details><summary>Insumos servicio ' + fmt(k) + ' ' + u + '</summary><ul class="lista-simple">' + t.insumos[k].map(function (i) { return '<li><span>' + esc(i[0]) + '</span><b>' + esc(i[1]) + '</b></li>'; }).join('') + '</ul></details>';
+            return '<details><summary>Insumos servicio ' + fmt(k) + ' ' + u + (t.pautaModelo ? ' (modelo ' + t.pautaModelo + ')' : '') + '</summary><ul class="lista-simple">' + t.insumos[k].map(function (i) { return '<li><span>' + esc(i[0]) + '</span><b>' + esc(i[1]) + '</b></li>'; }).join('') + '</ul></details>';
         }).join('');
         return '<article class="tipo-card"><header><div><h3>' + esc(t.nombre) + (esNuevo(t) ? NUEVO : '') + '</h3><span class="meta">Se mide en ' + (t.unidad === 'KM' ? 'kilómetros' : 'horas') + ' · próximo código <b>' + siguienteCodigo(t.prefijo) + '</b></span></div><span class="prefijo">' + esc(t.prefijo) + '</span></header>' +
             '<div class="chips">' + t.intervalos.map(function (i) { return '<span class="chip on">' + fmt(i) + ' ' + u + '</span>'; }).join('') + '</div>' +
@@ -1266,7 +1313,7 @@ function ponerTeselas(m) {
     })();
 }
 function iconoEquipo(e) {
-    return L.divIcon({ className: '', iconSize: null, iconAnchor: [8, 8],
+    return L.divIcon({ className: '', iconSize: null, iconAnchor: [7, 7],
         html: '<div class="marcador"><span class="rombo" style="background:' + ESTADOS[e.estado].color + (e.sinSenal ? ';opacity:.45' : '') + '"></span><span class="etq">' + esc(e.codigo) + '</span></div>' });
 }
 function asegurarMapa(idDiv, clave, lista) {
@@ -1278,6 +1325,12 @@ function asegurarMapa(idDiv, clave, lista) {
         ponerTeselas(mapas[clave]);
         L.circleMarker([BASE.lat, BASE.lng], { radius: 7, color: '#0b0b0c', weight: 3, fillColor: '#fff', fillOpacity: 1 }).bindTooltip(BASE.nombre).addTo(mapas[clave]);
         capas[clave] = L.layerGroup().addTo(mapas[clave]);
+        capas[clave]._mk = {};
+        // Con muchas máquinas, los códigos se muestran solo al acercarse (zoom 14 o más)
+        if (mapas[clave].on && mapas[clave].getZoom) {
+            var m0 = mapas[clave], ajustarEtiquetas = function () { div.classList.toggle('zoom-lejos', m0.getZoom() < 14); };
+            m0.on('zoomend', ajustarEtiquetas); ajustarEtiquetas();
+        }
     }
     actualizarMarcadores(clave, lista);
     setTimeout(function () {
@@ -1295,18 +1348,26 @@ function encuadrar(clave, lista) {
     else if (puntos.length === 1) m.setView(puntos[0], 14);
     else m.setView([BASE.lat, BASE.lng], 10);
 }
+// Reutiliza los marcadores: solo mueve los que cambiaron de lugar y cambia el ícono si cambió el estado
 function actualizarMarcadores(clave, lista) {
     var capa = capas[clave], m = mapas[clave];
     if (!capa) return;
-    capa.clearLayers();
-    var puntos = [];
+    var mk = capa._mk || (capa._mk = {}), vistos = {};
     lista.forEach(function (e) {
-        var mk = L.marker([e.lat, e.lng], { icon: iconoEquipo(e), title: e.codigo });
-        mk.on('click', function () { abrirFicha(e.codigo); });
-        mk.bindTooltip(idTxt(e.id) + ' · ' + esc(e.nombre) + '<br>' + esc(e.lugar), { direction: 'top', offset: [0, -10] });
-        capa.addLayer(mk);
-        puntos.push([e.lat, e.lng]);
+        vistos[e.codigo] = 1;
+        var firma = e.estado + (e.sinSenal ? 'x' : ''), x = mk[e.codigo];
+        if (!x) {
+            x = mk[e.codigo] = L.marker([e.lat, e.lng], { icon: iconoEquipo(e), title: e.codigo });
+            x._firma = firma;
+            x.on('click', function () { abrirFicha(e.codigo); });
+            x.bindTooltip(idTxt(e.id) + ' · ' + esc(e.nombre) + '<br>' + esc(e.lugar), { direction: 'top', offset: [0, -10] });
+            capa.addLayer(x);
+        } else {
+            x.setLatLng([e.lat, e.lng]);
+            if (x._firma !== firma) { x.setIcon(iconoEquipo(e)); x._firma = firma; }
+        }
     });
+    Object.keys(mk).forEach(function (c) { if (!vistos[c]) { capa.removeLayer(mk[c]); delete mk[c]; } });
     if (!m._ajustado) { encuadrar(clave, lista); m._ajustado = true; }
 }
 function verEnMapa(codigo) {
@@ -1391,7 +1452,8 @@ function pintarFichaDatos(codigo) {
         dato(t.unidad === 'KM' ? 'Odómetro' : 'Horómetro', fmt(e.horometro, t.unidad === 'KM' ? 0 : 1) + ' ' + u) + dato('Velocidad', e.sinSenal ? '—' : e.velocidad + ' km/h') +
         dato('Ubicación', celdaUbicacion(e).replace(/<span class="codigo-ant">[^<]*<\/span>$/, '')) + dato('Coordenadas', e.lat.toFixed(5) + ', ' + e.lng.toFixed(5)) +
         dato('Cliente', esc(e.cliente) || '—') + dato('Arriendo', a ? a.numero + ' · hasta ' + (a.hasta ? fechaCL(a.hasta) : 'sin fecha') : '—') +
-        dato('Patente', esc(e.patente) || '—') + dato('Último servicio', fmt(e.ultimoServicio) + ' ' + u) + '</dl>';
+        dato('Patente', esc(e.patente) || '—') + dato('Último servicio', fmt(e.ultimoServicio) + ' ' + u) +
+        dato('Marca y modelo', esc([e.marca, e.modelo].filter(Boolean).join(' ')) || '—') + dato('N° de serie', esc(e.serie) || '—') + '</dl>';
     var abierta = otAbierta(codigo), acc = document.getElementById('ficha-acciones');
     var firma = [abierta ? abierta.numero : '', e.estado, a ? a.numero : '', e.sinSenal].join('|');
     if (acc.dataset.firma !== firma) {
@@ -1620,8 +1682,9 @@ function mostrar(vista) {
 // Lleva a la lista exacta que forma un número: aplica el filtro y abre la pantalla
 function irA(dest) {
     if (dest.limpiar) Object.keys(filtro).forEach(function (k) { filtro[k] = ''; });
-    Object.keys(dest.set || {}).forEach(function (k) { filtro[k] = dest.set[k]; });
+    Object.keys(dest.set || {}).forEach(function (k) { filtro[k] = dest.set[k]; if (k !== 'estado') panelFiltros[dest.vista] = true; });
     if (dest.ot) filtroOT = dest.ot;
+    limite = { flota: PASO.flota, pron: PASO.pron, ordenes: PASO.ordenes }; clientesAbiertos = {};
     if (dest.vista === 'flota') modoFlota = 'tabla';
     Object.keys(mapas).forEach(function (m) { mapas[m]._ajustado = false; });
     mostrar(dest.vista);
@@ -1636,12 +1699,11 @@ function aviso(t) {
    EVENTOS
    ===================================================================== */
 document.addEventListener('click', function (ev) {
-    var ex = ev.target.closest('[data-encuadrar],[data-ayuda],[data-tab],[data-usuario],[data-ver-auditoria],[data-copiar],[data-reset-clave],#f-modoclave .chip,#exportar-csv,#saltar');
+    var ex = ev.target.closest('[data-mas],[data-mas-cliente],[data-estado-rapido],[data-mas-filtros],[data-encuadrar],[data-ayuda],[data-tab],[data-usuario],[data-ver-auditoria],[data-copiar],[data-reset-clave],#f-modoclave .chip,#exportar-csv,#saltar');
     if (ex && manejarExtra(ex, ev)) return;
-    var el = ev.target.closest('[data-toggle-filtros],[data-quitar-fd],[data-ir-a],[data-arrendar],[data-terminar-arriendo],[data-ot-cerrar],[data-ot-iniciar],[data-crear-ot],[data-ver-mapa],[data-reconectar],[data-foco],[data-ir],[data-crear],[data-cerrar-ficha],[data-cerrar-modal],#btn-guardar,#f-unidad .chip,#f-intervalos .chip,#chips-mant .filtro,#filtros-ot .filtro,#modo-flota .filtro,[data-equipo]');
+    var el = ev.target.closest('[data-quitar-fd],[data-ir-a],[data-arrendar],[data-terminar-arriendo],[data-ot-cerrar],[data-ot-iniciar],[data-crear-ot],[data-ver-mapa],[data-reconectar],[data-foco],[data-ir],[data-crear],[data-cerrar-ficha],[data-cerrar-modal],#btn-guardar,#f-unidad .chip,#f-intervalos .chip,#chips-mant .filtro,#filtros-ot .filtro,#modo-flota .filtro,[data-equipo]');
     if (!el) return;
     if (el.matches('[data-quitar-fd]')) { cambiarFiltro(el.dataset.quitarFd, ''); return; }
-    if (el.matches('[data-toggle-filtros]')) { var bf = el.closest('.barra-filtros'); bf.classList.toggle('abierta'); el.textContent = bf.classList.contains('abierta') ? 'Ocultar filtros' : 'Filtrar'; return; }
     if (el.matches('[data-ir-a]')) { ev.preventDefault(); irA(JSON.parse(el.dataset.irA)); return; }
     if (el.matches('[data-arrendar]')) { cerrarFicha(); abrirModal('arriendo', { 'f-equipo': el.dataset.arrendar }); document.getElementById('f-cliente').focus(); return; }
     if (el.matches('[data-terminar-arriendo]')) { terminarArriendo(el.dataset.terminarArriendo); return; }
@@ -1706,7 +1768,7 @@ document.addEventListener('click', function (ev) {
     }
     if (el.matches('#f-intervalos .chip')) { el.classList.toggle('on'); return; }
     if (el.matches('#chips-mant .filtro')) { cambiarFiltro('mant', el.dataset.mant); return; }
-    if (el.matches('#filtros-ot .filtro')) { filtroOT = el.dataset.ot; pintarOrdenes(); return; }
+    if (el.matches('#filtros-ot .filtro')) { filtroOT = el.dataset.ot; limite.ordenes = PASO.ordenes; pintarOrdenes(); return; }
     if (el.matches('#modo-flota .filtro')) { modoFlota = el.dataset.modo; pintarFlota(); return; }
     if (el.matches('[data-equipo]')) { abrirFicha(el.dataset.equipo); return; }
 });
@@ -1938,7 +2000,7 @@ function entrar(email, via) {
     // Cada sesión parte limpia: sin filtros de la persona anterior
     Object.keys(filtro).forEach(function (k) { filtro[k] = ''; });
     filtroAud = { usuario: '', accion: '', modulo: '', periodo: '', q: '' };
-    tabAdmin = 'usuarios'; filtroOT = 'ABIERTAS'; modoFlota = 'tabla';
+    tabAdmin = 'usuarios'; filtroOT = 'ABIERTAS'; modoFlota = 'tabla'; panelFiltros = {};
     registrar('ACCESO', 'Sesión', email, 'Inicio de sesión (' + via + ')', email);
     mostrar('dashboard');
     aviso('Hola, ' + u.nombre.split(' ')[0] + '. Sesión iniciada como ' + ROLES[u.rol].txt.toLowerCase() + '.');
@@ -2216,6 +2278,15 @@ function manejarExtra(el, ev) {
         return true;
     }
     if (el.matches('[data-ayuda]')) { abrirModal('ayuda'); return true; }
+    if (el.matches('[data-mas]')) { limite[el.dataset.mas] += PASO[el.dataset.mas]; repintar(); return true; }
+    if (el.matches('[data-mas-cliente]')) { clientesAbiertos[el.dataset.masCliente] = true; repintar(); return true; }
+    if (el.matches('[data-estado-rapido]')) { cambiarFiltro('estado', el.dataset.estadoRapido === filtro.estado ? '' : el.dataset.estadoRapido); return true; }
+    if (el.matches('[data-mas-filtros]')) {
+        var v = el.closest('.barra-filtros').dataset.vista;
+        panelFiltros[v] = !panelFiltros[v]; repintar();
+        if (panelFiltros[v]) { var pf = el.closest('.barra-filtros').querySelector('.fb-panel select'); if (pf) pf.focus(); }
+        return true;
+    }
     if (el.matches('[data-encuadrar]')) {
         var k = el.dataset.encuadrar; seleccionMapa = null;
         encuadrar(k, equiposFiltrados());
