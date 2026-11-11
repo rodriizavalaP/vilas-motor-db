@@ -4,6 +4,8 @@
 --  Si el número dice 3, su lista devuelve 3 filas: siempre calzan.
 -- =====================================================================
 USE vilas_motor;
+-- Quién hace los cambios de los ejemplos (queda en la auditoría)
+SET @app_usuario = (SELECT id_usuario FROM usuario WHERE email = 'planificador@vilasmotor.cl');
 
 -- ---------------------------------------------------------------------
 -- 1. Números del dashboard
@@ -30,10 +32,16 @@ SELECT id_txt, codigo, ubicacion, ultima_senal FROM v_proximo_mantenimiento WHER
 SELECT id_txt, codigo, ubicacion, ultima_senal FROM v_proximo_mantenimiento WHERE con_senal = 0 ORDER BY id_equipo DESC;
 
 -- "Mantención vencida" y "Mantención por vencer" (la más urgente primero)
-SELECT id_txt, codigo, tipo, proximo_servicio, restante FROM v_proximo_mantenimiento
+SELECT id_txt, codigo, tipo, servicio, restante FROM v_proximo_mantenimiento
 WHERE estado_mantencion = 'VENCIDO' ORDER BY restante;
-SELECT id_txt, codigo, tipo, proximo_servicio, restante FROM v_proximo_mantenimiento
+SELECT id_txt, codigo, tipo, servicio, restante FROM v_proximo_mantenimiento
 WHERE estado_mantencion = 'POR_VENCER' ORDER BY restante;
+
+-- Detalle por servicio de un equipo (cómo se llegó al próximo servicio)
+SELECT servicio, intervalo_horas, ultimo_cierre, restante
+FROM v_mantencion_servicio
+WHERE id_equipo = (SELECT id_equipo FROM equipo WHERE codigo_anterior = 'V168')
+ORDER BY restante;
 
 -- "Órdenes abiertas" y "N en el historial" (la OT más reciente primero)
 SELECT ot.numero_ot, e.codigo, sp.nombre AS servicio, ot.estado, ot.fecha_programada
@@ -61,11 +69,9 @@ ORDER BY id_equipo DESC;
 -- ---------------------------------------------------------------------
 -- 4. Pauta de insumos del próximo servicio de un equipo
 -- ---------------------------------------------------------------------
-SELECT pm.codigo, pm.proximo_servicio, i.nombre AS insumo, spi.cantidad, i.unidad_medida
+SELECT pm.codigo, pm.servicio, i.nombre AS insumo, spi.cantidad, i.unidad_medida
 FROM v_proximo_mantenimiento pm
-JOIN plan_mantencion pl      ON pl.id_tipo_equipo = pm.id_tipo_equipo
-JOIN servicio_plan sp        ON sp.id_plan = pl.id_plan AND sp.intervalo_horas = pm.proximo_servicio
-JOIN servicio_plan_insumo spi ON spi.id_servicio_plan = sp.id_servicio_plan
+JOIN servicio_plan_insumo spi ON spi.id_servicio_plan = pm.id_servicio_plan
 JOIN insumo i                ON i.id_insumo = spi.id_insumo
 WHERE pm.modelo = 'G45QX'   -- generadores JCB G45QX (pauta de la planilla)
 ORDER BY pm.codigo;
@@ -82,26 +88,42 @@ ORDER BY pm.codigo;
 -- VALUES ((SELECT id_tipo_equipo FROM tipo_equipo WHERE nombre = 'Camión'), '', '', 'Volvo', 'FH 540', 'Taller', -20.2448, -70.1393);
 
 -- Nuevo arriendo del primer equipo disponible: el número sale solo (ARR-0186 si cargaste 04_datos_simulados.sql);
--- el equipo pasa a EN_FAENA y toma la ubicación de la faena
+-- el equipo pasa a EN_FAENA y toma la ubicación de la faena. Si el equipo no está
+-- DISPONIBLE o ya tiene un arriendo vigente, la base lo rechaza.
 -- INSERT INTO arriendo (numero, id_equipo, id_cliente, id_faena, fecha_inicio)
 -- VALUES ('', (SELECT id_equipo FROM v_disponibles_arriendo LIMIT 1),
 --         (SELECT id_cliente FROM cliente WHERE razon_social = 'Áridos del Norte Ltda'),
 --         (SELECT id_faena FROM faena WHERE nombre = 'Zofri, Iquique'), CURDATE());
 
--- Terminar un arriendo: el equipo vuelve a DISPONIBLE en el taller
--- UPDATE arriendo SET estado = 'TERMINADO', fecha_termino = CURDATE() WHERE numero = 'ARR-0186';
+-- Terminar un arriendo (dos pasos, como en el MVP):
+--   1) cerrar el contrato: queda TERMINADO con fecha de hoy; el equipo sigue EN_FAENA
+-- UPDATE arriendo SET estado = 'TERMINADO' WHERE numero = 'ARR-0186';
+--   2) marcar el regreso: el equipo vuelve al taller como DISPONIBLE
+-- CALL sp_marcar_regreso((SELECT id_equipo FROM arriendo WHERE numero = 'ARR-0186'));
 
 -- Nueva OT con número correlativo
+-- SET @nueva_ot = (SELECT MAX(CAST(numero_ot AS UNSIGNED)) + 1 FROM orden_trabajo);
 -- INSERT INTO orden_trabajo (id_equipo, id_servicio_plan, tipo, numero_ot, fecha_programada)
--- SELECT pm.id_equipo, sp.id_servicio_plan, 'PREVENTIVA',
---        (SELECT MAX(CAST(numero_ot AS UNSIGNED)) + 1 FROM orden_trabajo), CURDATE()
+-- SELECT pm.id_equipo, pm.id_servicio_plan, 'PREVENTIVA', @nueva_ot, CURDATE()
 -- FROM v_proximo_mantenimiento pm
--- JOIN plan_mantencion pl ON pl.id_tipo_equipo = pm.id_tipo_equipo
--- JOIN servicio_plan sp ON sp.id_plan = pl.id_plan AND sp.intervalo_horas = pm.proximo_servicio
 -- WHERE pm.codigo = 'GH-001';
 
--- Cerrar una OT (usa el número de la OT que creaste): el último servicio del equipo se actualiza solo
--- UPDATE orden_trabajo SET estado = 'CERRADA', fecha_ejecucion = CURDATE(), horometro_cierre = 3620 WHERE numero_ot = (SELECT MAX(numero_ot) FROM orden_trabajo WHERE id_equipo = 1);
+-- Iniciar la OT: el equipo pasa a EN_MANTENIMIENTO (solo si estaba DISPONIBLE o INTERNO)
+-- UPDATE orden_trabajo SET estado = 'EN_CURSO' WHERE numero_ot = @nueva_ot;
+
+-- Cerrar la OT: queda la lectura del técnico, el horómetro avanza y el equipo vuelve
+-- a su estado previo. El horómetro de cierre no puede ser menor al actual.
+-- UPDATE orden_trabajo SET estado = 'CERRADA', horometro_cierre = 3620 WHERE numero_ot = @nueva_ot;
+
+-- ---------------------------------------------------------------------
+-- 5b. Lecturas de horómetro (validadas por la base)
+-- ---------------------------------------------------------------------
+-- Válida: igual o mayor a la actual; actualiza el horómetro del equipo
+-- INSERT INTO lectura_horometro (id_equipo, id_usuario, valor, fecha_hora, fuente)
+-- VALUES (1, @app_usuario, 3650.0, NOW(), 'CLIENTE');
+-- Rechazada: menor a la actual ("La lectura no puede ser menor al horómetro actual del equipo.")
+-- INSERT INTO lectura_horometro (id_equipo, id_usuario, valor, fecha_hora, fuente)
+-- VALUES (1, @app_usuario, 100.0, NOW(), 'CLIENTE');
 
 -- ---------------------------------------------------------------------
 -- 6. Simular señales GPS (en producción las envía cada dispositivo)

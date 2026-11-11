@@ -7,6 +7,7 @@
 -- =====================================================================
 USE vilas_motor;
 SET @app_usuario = (SELECT id_usuario FROM usuario WHERE email = 'planificador@vilasmotor.cl');
+SET @carga_datos = 1;     -- carga masiva: se saltan las validaciones de negocio de los triggers
 
 -- Estados, horómetros y ubicación (los equipos en faena los marca el trigger del arriendo)
 UPDATE equipo SET horometro_actual = 3620.0, ultimo_servicio = 3157 WHERE id_equipo = 1;
@@ -1056,3 +1057,6 @@ INSERT INTO orden_trabajo (id_equipo, id_servicio_plan, tipo, estado, numero_ot,
   (347, (SELECT sp.id_servicio_plan FROM servicio_plan sp JOIN plan_mantencion pm ON pm.id_plan = sp.id_plan JOIN equipo e ON e.id_tipo_equipo = pm.id_tipo_equipo WHERE e.id_equipo = 347 AND sp.intervalo_horas = 20000), 'PREVENTIVA', 'PROGRAMADA', '107059', '2026-11-08'),
   (353, (SELECT sp.id_servicio_plan FROM servicio_plan sp JOIN plan_mantencion pm ON pm.id_plan = sp.id_plan JOIN equipo e ON e.id_tipo_equipo = pm.id_tipo_equipo WHERE e.id_equipo = 353 AND sp.intervalo_horas = 10000), 'PREVENTIVA', 'EN_CURSO', '107060', '2026-10-29'),
   (385, (SELECT sp.id_servicio_plan FROM servicio_plan sp JOIN plan_mantencion pm ON pm.id_plan = sp.id_plan JOIN equipo e ON e.id_tipo_equipo = pm.id_tipo_equipo WHERE e.id_equipo = 385 AND sp.intervalo_horas = 500), 'PREVENTIVA', 'EN_CURSO', '107061', '2026-10-24');
+
+-- Fin de la carga: desde aquí los triggers vuelven a validar cada operación
+SET @carga_datos = 0;
