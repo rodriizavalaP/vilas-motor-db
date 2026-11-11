@@ -422,11 +422,39 @@ tr.recien td { animation: destello 2.4s ease; }
 tr.clic:focus-visible { outline-offset: -3px; }
 .saltar { position: absolute; left: -9999px; top: 8px; z-index: 3000; background: #fff; color: var(--negro); padding: 10px 16px; font-weight: 600; border: 3px solid var(--rojo); text-decoration: none; }
 .saltar:focus { left: 12px; }
+/* ---- Mejoras de accesibilidad y uso en móvil ---- */
+/* Rojo sobre negro: el rojo corporativo no alcanza contraste AA en texto chico; se aclara solo en fondos oscuros */
+:root { --rojo-sobre-negro: #ff4a42; }
+.page-hero .eyebrow, .login-lado .eyebrow, .auto dt, .ficha-cabecera .eyebrow { color: var(--rojo-sobre-negro); }
+.page-hero .eyebrow::before, .login-lado .eyebrow::before { background: var(--rojo-sobre-negro); }
+/* Contrato cerrado que espera el regreso de la máquina */
+.por-recibir { display: block; margin: 4px 0 6px; font-size: 12px; font-weight: 600; color: var(--warn); }
+/* Tablas anchas: un degradado en el borde derecho avisa que hay más columnas; desaparece al llegar al final */
+.panel-cuerpo { -webkit-overflow-scrolling: touch; }
+.panel-cuerpo.desborda:not(.al-final) { -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 48px), rgba(0,0,0,.15)); mask-image: linear-gradient(to right, #000 calc(100% - 48px), rgba(0,0,0,.15)); }
+@media (max-width: 700px) {
+    /* La primera columna (ID o número) queda fija al desplazar la tabla */
+    .panel-cuerpo th:first-child, .panel-cuerpo td:first-child { position: sticky; left: 0; z-index: 1; background: inherit; box-shadow: 1px 0 0 var(--linea); }
+    .panel-cuerpo thead th:first-child { background: #fafafa; }
+    .panel-cuerpo tr { background: #fff; }
+}
+@media (max-width: 900px) {
+    /* El menú se desplaza de lado: un degradado indica que hay más secciones */
+    .main-nav { -webkit-mask-image: linear-gradient(to right, #000 85%, transparent); mask-image: linear-gradient(to right, #000 85%, transparent); scrollbar-width: none; }
+    .main-nav::-webkit-scrollbar { display: none; }
+    .main-nav a { flex: 0 0 auto; }
+}
+/* Objetivos táctiles de al menos 44 px en pantallas táctiles */
+@media (pointer: coarse) {
+    .btn-chico, .filtro, .chip, .icon-btn { min-height: 44px; }
+}
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
 
 .usuario-nombre { display: flex; flex-direction: column; line-height: 1.2; font-size: 13px; color: #fff; text-align: right; }
 .usuario-nombre small { color: #a1a1aa; font-size: 12px; }
-@media (max-width: 1700px) { .usuario-nombre { display: none; } }\n.header-inner { gap: 20px; }\n.main-nav a { padding: 0 11px; }
+@media (max-width: 1700px) { .usuario-nombre { display: none; } }
+.header-inner { gap: 20px; }
+.main-nav a { padding: 0 11px; }
 .icon-btn.ayuda { font-family: var(--display); font-weight: 700; font-size: 18px; }
 
 .tabs { display: flex; gap: 4px; border-bottom: 2px solid var(--negro); margin-bottom: 22px; flex-wrap: wrap; }
@@ -473,7 +501,7 @@ kbd { font-family: ui-monospace, Consolas, monospace; font-size: 12px; border: 1
 .leaflet-container a.leaflet-control-zoom-in, .leaflet-container a.leaflet-control-zoom-out { font-family: var(--cuerpo); }
 
 /* Permisos por rol: el técnico no ve lo que no puede hacer */
-.rol-TECNICO [data-crear], .rol-TECNICO [data-arrendar], .rol-TECNICO [data-terminar-arriendo],
+.rol-TECNICO [data-crear], .rol-TECNICO [data-arrendar], .rol-TECNICO [data-terminar-arriendo], .rol-TECNICO [data-marcar-regreso],
 .rol-TECNICO select[data-cambiar-estado], .rol-TECNICO [data-reconectar] { display: none !important; }
 </style>
 </head>
@@ -864,7 +892,7 @@ var MANT = {
     AL_DIA: { txt: 'Al día', badge: 'badge-ok' }, SIN_PLAN: { txt: 'Sin plan', badge: 'badge-neutral' }
 };
 var ESTADOS_OT = {
-    PROGRAMADA: { txt: 'Programada', badge: 'badge-neutral' }, EN_EJECUCION: { txt: 'En ejecución', badge: 'badge-warn' }, CERRADA: { txt: 'Cerrada', badge: 'badge-ok' }
+    PROGRAMADA: { txt: 'Programada', badge: 'badge-neutral' }, EN_CURSO: { txt: 'En curso', badge: 'badge-warn' }, CERRADA: { txt: 'Cerrada', badge: 'badge-ok' }
 };
 
 /* =====================================================================
@@ -944,7 +972,7 @@ function construirDesdeDatos() {
     });
     s.arriendos.sort(function (a, b) { return a.numero < b.numero ? -1 : 1; });
     FLOTA.ordenes.forEach(function (o) {
-        s.ordenes.push({ numero: o[0], equipo: o[1], fecha: o[2], servicio: o[3], horometro: o[4], estado: o[5], creado: 0 });
+        s.ordenes.push({ numero: o[0], equipo: o[1], fecha: o[2], servicio: o[3], horometro: o[4], estado: o[5] === 'EN_EJECUCION' ? 'EN_CURSO' : o[5], creado: 0 });
     });
     s.usuarios = semillaUsuarios();
     s.auditoria = semillaAuditoria(s);
@@ -958,6 +986,8 @@ function cargar() {
             // Datos guardados por la versión anterior: se les agregan usuarios y auditoría sin perder nada
             if (!estado.usuarios) estado.usuarios = semillaUsuarios();
             if (!estado.auditoria) estado.auditoria = semillaAuditoria(estado);
+            // Versión anterior: la OT iniciada se llamaba EN_EJECUCION (en el MVP es EN_CURSO)
+            estado.ordenes.forEach(function (o) { if (o.estado === 'EN_EJECUCION') o.estado = 'EN_CURSO'; });
             return;
         }
     } catch (e) {}
@@ -980,13 +1010,27 @@ function otAbierta(c) { return estado.ordenes.filter(function (o) { return o.equ
 /* =====================================================================
    PRÓXIMO SERVICIO Y SEÑAL
    ===================================================================== */
+// Horómetros de cierre de las OT cerradas de un equipo para un servicio
+function ultimoCierre(codigo, servicio) {
+    var max = null;
+    estado.ordenes.forEach(function (o) {
+        if (o.equipo === codigo && o.servicio === servicio && o.estado === 'CERRADA' && o.horometro != null && (max === null || o.horometro > max)) max = o.horometro;
+    });
+    return max;
+}
 function proximoServicio(e) {
     var t = tipoPorNombre(e.tipo);
     if (!t || !t.intervalos.length) return { estado: 'SIN_PLAN' };
-    var base = Math.min.apply(null, t.intervalos), vence = e.ultimoServicio + base;
-    var nominal = (Math.floor(e.ultimoServicio / base) + 1) * base, servicio = base;
-    t.intervalos.forEach(function (i) { if (nominal % i === 0 && i > servicio) servicio = i; });
-    var restante = vence - e.horometro;
+    // Regla del MVP: por cada servicio del plan, restante = intervalo - (horómetro actual -
+    // horómetro de cierre de su última OT cerrada). Manda el que está más cerca de vencer.
+    // Sin OT cerrada de ese servicio se parte del último servicio registrado del equipo.
+    var base = Math.min.apply(null, t.intervalos), servicio = null, restante = null, desde = 0;
+    t.intervalos.slice().sort(function (a, b) { return a - b; }).forEach(function (i) {
+        var c = ultimoCierre(e.codigo, i), ultimo = c === null ? e.ultimoServicio : c;
+        var r = i - (e.horometro - ultimo);
+        if (restante === null || r < restante) { restante = r; servicio = i; desde = ultimo; }
+    });
+    var vence = desde + servicio;
     return { servicio: servicio, vence: vence, restante: restante, base: base, unidad: t.unidad,
              estado: restante < 0 ? 'VENCIDO' : (restante <= UMBRAL[t.unidad] ? 'POR_VENCER' : 'AL_DIA'),
              insumos: (t.insumos && (!t.pautaModelo || String(e.modelo || '').toUpperCase().indexOf(t.pautaModelo) !== -1) && (t.insumos[servicio] || t.insumos[base])) || [] };
@@ -1232,12 +1276,12 @@ function pintarArriendos() {
         '<div class="barra-acciones"><div class="info"><b>' + disp.length + '</b> equipo' + (disp.length === 1 ? '' : 's') + ' disponible' + (disp.length === 1 ? '' : 's') + ' para arrendar' +
         (disp.length ? '<div class="disponibles">' + disp.slice(0, 30).map(function (e) { return '<button data-arrendar="' + esc(e.codigo) + '" title="' + esc(e.nombre) + '">' + esc(e.codigo) + '</button>'; }).join('') +
             (disp.length > 30 ? '<button data-ir-a="' + ir({ vista: 'flota', set: { estado: 'DISPONIBLE' } }) + '">Ver los ' + disp.length + ' →</button>' : '') + '</div>'
-                     : '<div class="codigo-ant">Agrega maquinaria o termina un arriendo para liberar equipos.</div>') +
+                     : '<div class="codigo-ant">Agrega maquinaria o marca el regreso de un equipo para liberarlo.</div>') +
         '</div><div class="herramientas"><button class="btn btn-secondary" data-crear="equipo">+ Agregar maquinaria</button><button class="btn btn-primary" data-crear="arriendo"' + (disp.length ? '' : ' disabled') + '>+ Nuevo arriendo</button></div></div>';
     var enFaena = contar({ estado: 'EN_FAENA' });
     var grupos = {};
     enFaena.forEach(function (e) {
-        var a = arriendoVigente(e.codigo), c = e.cliente || 'Sin cliente';
+        var a = arriendoVigente(e.codigo) || ultimoArriendo(e.codigo), c = e.cliente || 'Sin cliente';
         (grupos[c] = grupos[c] || []).push({ e: e, a: a, n: a ? parseInt(a.numero.slice(4), 10) : 0 });
     });
     Object.keys(grupos).forEach(function (c) { grupos[c].sort(function (x, y) { return y.n - x.n; }); });
@@ -1246,7 +1290,8 @@ function pintarArriendos() {
         return '<section class="panel cliente-bloque"><div class="panel-encabezado"><h2>' + esc(c) + '</h2><span class="contador"><b>' + grupos[c].length + '</b> equipo' + (grupos[c].length === 1 ? '' : 's') + '</span></div><div class="panel-cuerpo"><table><thead><tr><th>Arriendo</th><th>ID</th><th>Equipo</th><th>Período</th><th>Ubicación GPS</th><th>Señal</th></tr></thead><tbody>' +
             grupos[c].slice(0, clientesAbiertos[c] ? grupos[c].length : PASO.cliente).map(function (x) {
                 var e = x.e, a = x.a, s = senal(e);
-                return '<tr class="clic' + (a && recien === a.numero ? ' recien' : '') + '" data-equipo="' + esc(e.codigo) + '"><td>' + (a ? '<span class="codigo">' + a.numero + '</span>' + (esNuevo(a) ? NUEVO : '') : '—') +
+                return '<tr class="clic' + (a && recien === a.numero ? ' recien' : '') + '" data-equipo="' + esc(e.codigo) + '"><td>' + (a ? '<span class="codigo">' + a.numero + '</span>' + (esNuevo(a) ? NUEVO : '') +
+                        (a.estado === 'TERMINADO' ? '<span class="por-recibir">Contrato cerrado</span><button class="btn btn-primary btn-chico" data-marcar-regreso="' + esc(e.codigo) + '">Marcar regreso</button>' : '') : '—') +
                     '</td><td>' + celdaId(e) + '</td><td>' + celdaCodigo(e) + '<span class="codigo-ant">' + esc(e.nombre) + '</span></td><td>' + (a ? fechaCL(a.desde) + ' → ' + (a.hasta ? fechaCL(a.hasta) : 'sin fecha') : '—') +
                     '</td><td>' + celdaUbicacion(e).replace(/<span class="codigo-ant">[^<]*<\/span>$/, '') + '<span class="codigo-ant">' + e.lat.toFixed(4) + ', ' + e.lng.toFixed(4) + '</span></td><td><span class="senal ' + s.clase + '">' + s.txt + '</span></td></tr>';
             }).join('') + (!clientesAbiertos[c] && grupos[c].length > PASO.cliente
@@ -1269,7 +1314,7 @@ function pintarOrdenes() {
     document.getElementById('tabla-ordenes').innerHTML = lista.slice(0, limite.ordenes).map(function (o) {
         var e = equipoPorCodigo(o.equipo), u = e ? unidadCorta(tipoPorNombre(e.tipo).unidad) : '';
         var acc = o.estado === 'PROGRAMADA' ? '<button class="btn btn-secondary btn-chico" data-ot-iniciar="' + o.numero + '">Iniciar</button>'
-                : o.estado === 'EN_EJECUCION' ? '<button class="btn btn-primary btn-chico" data-ot-cerrar="' + o.numero + '">Cerrar OT</button>' : '';
+                : o.estado === 'EN_CURSO' ? '<button class="btn btn-primary btn-chico" data-ot-cerrar="' + o.numero + '">Cerrar OT</button>' : '';
         return '<tr class="clic' + (recien === 'OT' + o.numero ? ' recien' : '') + '" data-equipo="' + esc(o.equipo) + '"><td><span class="codigo">OT ' + o.numero + '</span>' + (esNuevo(o) ? NUEVO : '') + '</td><td>' + (e ? celdaCodigo(e) + '<span class="codigo-ant">' + idTxt(e.id) + '</span>' : esc(o.equipo)) +
             '</td><td>Servicio ' + fmt(o.servicio) + ' ' + u + '</td><td>' + fechaCL(o.fecha) + '</td><td class="horas">' + fmt(o.horometro) + ' ' + u + '</td><td>' + badge(ESTADOS_OT, o.estado) + '</td><td>' + acc + '</td></tr>';
     }).join('') + filaMas(7, lista.length - limite.ordenes, 'ordenes') || '<tr><td colspan="7" class="vacio">No hay órdenes en esta vista.</td></tr>';
@@ -1291,7 +1336,17 @@ function pintarTipos() {
 }
 
 var PINTAR = { dashboard: pintarDashboard, flota: pintarFlota, arriendos: pintarArriendos, ordenes: pintarOrdenes, tipos: pintarTipos, admin: function () { pintarAdmin(); } };
-function repintar() { if (PINTAR[vistaActual]) PINTAR[vistaActual](); hacerEnfocables(); }
+// Marca las tablas que se salen de la pantalla para mostrar el aviso de desplazamiento
+function actualizarDesbordes() {
+    document.querySelectorAll('.panel-cuerpo').forEach(function (c) {
+        var desborda = c.scrollWidth > c.clientWidth + 2;
+        c.classList.toggle('desborda', desborda);
+        c.classList.toggle('al-final', desborda && c.scrollLeft + c.clientWidth >= c.scrollWidth - 2);
+    });
+}
+document.addEventListener('scroll', function (ev) { if (ev.target.classList && ev.target.classList.contains('panel-cuerpo')) actualizarDesbordes(); }, true);
+window.addEventListener('resize', function () { actualizarDesbordes(); });
+function repintar() { if (PINTAR[vistaActual]) PINTAR[vistaActual](); hacerEnfocables(); actualizarDesbordes(); }
 
 /* =====================================================================
    MAPAS (Leaflet). Si un proveedor de mapa falla, se cambia solo a otro.
@@ -1461,7 +1516,8 @@ function pintarFichaDatos(codigo) {
             (abierta ? '<button class="btn btn-secondary" data-ir-a="' + ir({ vista: 'ordenes', ot: 'ABIERTAS' }) + '">Ver OT ' + abierta.numero + '</button>'
                      : (p.servicio ? '<button class="btn btn-primary" data-crear-ot="' + esc(codigo) + '">Crear OT ' + fmt(p.servicio) + ' ' + u + '</button>' : '')) +
             (e.estado === 'DISPONIBLE' ? '<button class="btn btn-primary" data-arrendar="' + esc(codigo) + '">Arrendar</button>' : '') +
-            (a ? '<button class="btn btn-secondary" data-terminar-arriendo="' + esc(codigo) + '">Terminar arriendo</button>' : '') +
+            (a ? '<button class="btn btn-secondary" data-terminar-arriendo="' + esc(codigo) + '">Cerrar contrato</button>' : '') +
+            (porRecibir(e) ? '<button class="btn btn-primary" data-marcar-regreso="' + esc(codigo) + '">Marcar regreso</button>' : '') +
             '<select data-cambiar-estado="' + esc(codigo) + '" aria-label="Cambiar estado">' + Object.keys(ESTADOS).map(function (k) { return '<option value="' + k + '"' + (k === e.estado ? ' selected' : '') + '>' + ESTADOS[k].txt + '</option>'; }).join('') + '</select>' +
             '<button class="btn btn-secondary" data-ver-mapa="' + esc(codigo) + '">Ver en mapa</button>' +
             (e.sinSenal ? '<button class="btn btn-secondary" data-reconectar="' + esc(codigo) + '">Simular señal</button>' : '');
@@ -1645,14 +1701,30 @@ function cerrarModal(volver) {
     return null;
 }
 
+// Un arriendo se termina en dos pasos, igual que en el MVP:
+//   1) cerrar el contrato (queda con fecha de término; la máquina sigue en faena)
+//   2) marcar el regreso cuando la máquina llega al taller (vuelve a estar disponible)
 function terminarArriendo(codigo) {
     var e = equipoPorCodigo(codigo), a = arriendoVigente(codigo);
-    if (!e || !a || !confirm('¿Terminar el arriendo ' + a.numero + ' de ' + e.codigo + '? El equipo vuelve al taller como disponible.')) return;
+    if (!e || !a || !confirm('¿Cerrar el contrato ' + a.numero + ' de ' + e.codigo + '? La máquina sigue en faena hasta que marques su regreso.')) return;
     a.estado = 'TERMINADO'; a.hasta = hoyISO();
+    registrar('ACTUALIZAR', 'Arriendo', a.numero, 'Contrato cerrado. ' + e.codigo + ' queda por recibir');
+    aviso('Contrato ' + a.numero + ' cerrado. Marca el regreso de ' + e.codigo + ' cuando llegue al taller.');
+    repintar();
+}
+function ultimoArriendo(codigo) {
+    var ult = null;
+    estado.arriendos.forEach(function (a) { if (a.equipo === codigo && (!ult || a.numero > ult.numero)) ult = a; });
+    return ult;
+}
+function porRecibir(e) { return e.estado === 'EN_FAENA' && !arriendoVigente(e.codigo); }
+function marcarRegreso(codigo) {
+    var e = equipoPorCodigo(codigo);
+    if (!e || !porRecibir(e)) return;
     e.estado = 'DISPONIBLE'; e.cliente = ''; e.lugar = 'Taller'; e.ruta = false;
     e.lat = BASE.lat + (Math.random() - 0.5) * 0.001; e.lng = BASE.lng + (Math.random() - 0.5) * 0.001;
-    registrar('ACTUALIZAR', 'Arriendo', a.numero, 'Terminado. ' + e.codigo + ' vuelve al taller como disponible');
-    aviso('Arriendo ' + a.numero + ' terminado. ' + e.codigo + ' quedó disponible.');
+    registrar('ACTUALIZAR', 'Equipo', e.codigo, 'Regreso marcado: vuelve al taller como disponible');
+    aviso(e.codigo + ' llegó al taller y quedó disponible.');
     enVivo(); repintar();
 }
 
@@ -1674,6 +1746,8 @@ function mostrar(vista) {
         a.classList.toggle('activo', a.dataset.ir === vista);
         if (a.dataset.ir === vista) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
     });
+    var activo = document.querySelector('#nav a.activo');
+    if (activo && activo.scrollIntoView && window.innerWidth <= 900) activo.scrollIntoView({ block: 'nearest', inline: 'center' });
     pilaModal = []; cerrarFicha(); if (formActual) cerrarModal(false);
     repintar();
     if (vista === 'login') irPaso(1);
@@ -1701,22 +1775,26 @@ function aviso(t) {
 document.addEventListener('click', function (ev) {
     var ex = ev.target.closest('[data-mas],[data-mas-cliente],[data-estado-rapido],[data-mas-filtros],[data-encuadrar],[data-ayuda],[data-tab],[data-usuario],[data-ver-auditoria],[data-copiar],[data-reset-clave],#f-modoclave .chip,#exportar-csv,#saltar');
     if (ex && manejarExtra(ex, ev)) return;
-    var el = ev.target.closest('[data-quitar-fd],[data-ir-a],[data-arrendar],[data-terminar-arriendo],[data-ot-cerrar],[data-ot-iniciar],[data-crear-ot],[data-ver-mapa],[data-reconectar],[data-foco],[data-ir],[data-crear],[data-cerrar-ficha],[data-cerrar-modal],#btn-guardar,#f-unidad .chip,#f-intervalos .chip,#chips-mant .filtro,#filtros-ot .filtro,#modo-flota .filtro,[data-equipo]');
+    var el = ev.target.closest('[data-quitar-fd],[data-ir-a],[data-arrendar],[data-terminar-arriendo],[data-marcar-regreso],[data-ot-cerrar],[data-ot-iniciar],[data-crear-ot],[data-ver-mapa],[data-reconectar],[data-foco],[data-ir],[data-crear],[data-cerrar-ficha],[data-cerrar-modal],#btn-guardar,#f-unidad .chip,#f-intervalos .chip,#chips-mant .filtro,#filtros-ot .filtro,#modo-flota .filtro,[data-equipo]');
     if (!el) return;
     if (el.matches('[data-quitar-fd]')) { cambiarFiltro(el.dataset.quitarFd, ''); return; }
     if (el.matches('[data-ir-a]')) { ev.preventDefault(); irA(JSON.parse(el.dataset.irA)); return; }
     if (el.matches('[data-arrendar]')) { cerrarFicha(); abrirModal('arriendo', { 'f-equipo': el.dataset.arrendar }); document.getElementById('f-cliente').focus(); return; }
     if (el.matches('[data-terminar-arriendo]')) { terminarArriendo(el.dataset.terminarArriendo); return; }
+    if (el.matches('[data-marcar-regreso]')) { ev.stopPropagation(); marcarRegreso(el.dataset.marcarRegreso); return; }
     if (el.matches('[data-ot-iniciar]')) {
         var o = estado.ordenes.filter(function (x) { return x.numero === +el.dataset.otIniciar; })[0], eq = equipoPorCodigo(o.equipo);
-        o.estado = 'EN_EJECUCION';
-        if (eq.estado !== 'EN_MANTENIMIENTO') { eq.estadoPrevio = eq.estado; eq.estado = 'EN_MANTENIMIENTO'; }
-        registrar('ACTUALIZAR', 'Orden de trabajo', 'OT ' + o.numero, 'Programada → En ejecución · ' + eq.codigo + ' pasa a mantención');
-        repintar(); aviso('OT ' + o.numero + ' en ejecución. ' + eq.codigo + ' pasó a mantención.'); return;
+        // Igual que el MVP: solo entra al taller un equipo disponible o de uso interno
+        if (eq.estado === 'EN_FAENA') { aviso(eq.codigo + ' está en faena con el cliente. Cierra su contrato y marca su regreso antes de iniciar la OT.'); return; }
+        if (eq.estado === 'EN_MANTENIMIENTO') { aviso(eq.codigo + ' ya está en mantención con otra OT en curso.'); return; }
+        o.estado = 'EN_CURSO';
+        eq.estadoPrevio = eq.estado; eq.estado = 'EN_MANTENIMIENTO'; eq.lugar = 'Taller';
+        registrar('ACTUALIZAR', 'Orden de trabajo', 'OT ' + o.numero, 'Programada → En curso · ' + eq.codigo + ' pasa a mantención');
+        repintar(); aviso('OT ' + o.numero + ' en curso. ' + eq.codigo + ' pasó a mantención.'); return;
     }
     if (el.matches('[data-ot-cerrar]')) {
         var oc = estado.ordenes.filter(function (x) { return x.numero === +el.dataset.otCerrar; })[0], ec = equipoPorCodigo(oc.equipo);
-        oc.estado = 'CERRADA'; oc.horometro = Math.round(ec.horometro); oc.fecha = hoyISO(); ec.ultimoServicio = Math.round(ec.horometro);
+        oc.estado = 'CERRADA'; oc.horometro = Math.round(ec.horometro * 10) / 10; oc.fecha = hoyISO(); ec.ultimoServicio = oc.horometro;
         if (ec.estado === 'EN_MANTENIMIENTO') ec.estado = ec.estadoPrevio || 'DISPONIBLE';
         registrar('ACTUALIZAR', 'Orden de trabajo', 'OT ' + oc.numero, 'Cerrada a las ' + fmt(oc.horometro) + ' · ' + ec.codigo + ' recalcula su próximo servicio');
         repintar(); aviso('OT ' + oc.numero + ' cerrada. El próximo servicio de ' + ec.codigo + ' se recalculó.'); return;
@@ -1795,7 +1873,7 @@ document.addEventListener('change', function (ev) {
             if (e.estado !== 'DISPONIBLE') { aviso('Solo un equipo disponible se puede arrendar.'); return; }
             cerrarFicha(); abrirModal('arriendo', { 'f-equipo': e.codigo }); return;
         }
-        if (a && el.value !== 'EN_FAENA') { el.value = e.estado; aviso('Primero termina el arriendo ' + a.numero + ' con el botón "Terminar arriendo".'); return; }
+        if (a && el.value !== 'EN_FAENA') { el.value = e.estado; aviso('Primero cierra el contrato ' + a.numero + ' y luego marca el regreso del equipo.'); return; }
         if (el.value === 'EN_MANTENIMIENTO' && e.estado !== 'EN_MANTENIMIENTO') e.estadoPrevio = e.estado;
         var antes = e.estado;
         e.estado = el.value;

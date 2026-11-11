@@ -17,6 +17,7 @@ USE vilas_motor;
 --   (hash en formato Django pbkdf2_sha256; la clave nunca se guarda en texto)
 -- ---------------------------------------------------------------------
 SET @app_usuario = NULL;   -- la carga inicial queda registrada como "Sistema"
+SET @carga_datos = 1;     -- carga masiva: se saltan las validaciones de negocio de los triggers
 
 INSERT INTO rol (nombre, descripcion) VALUES
   ('ADMINISTRADOR', 'Todo el sistema, más crear usuarios y ver el historial de auditoría'),
@@ -666,3 +667,6 @@ JOIN equipo e           ON e.codigo_anterior = o.equipo
 JOIN plan_mantencion pm ON pm.id_tipo_equipo = e.id_tipo_equipo
 JOIN servicio_plan sp   ON sp.id_plan = pm.id_plan AND sp.intervalo_horas = o.servicio
 ORDER BY CAST(o.numero AS UNSIGNED);
+
+-- Fin de la carga: desde aquí los triggers vuelven a validar cada operación
+SET @carga_datos = 0;
