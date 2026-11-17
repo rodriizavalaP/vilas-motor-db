@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Dashboard — Vilas Motor{% endblock %}
+{% block content %}
+<section class="mock-heading"><div><h1>Dashboard</h1><p>Resumen de la flota y tareas pendientes.</p></div><div><a class="btn btn-secondary" href="{% url 'flota:equipos' %}">▣ Ver flota</a><a class="btn btn-primary" href="{% url 'mantencion:crear_orden' %}">＋ Crear OT</a></div></section>
+
+<section class="mock-kpis">
+    <a href="{% url 'flota:equipos' %}" class="mock-kpi"><span class="mock-icon icon-slate">▣</span><span><small>Equipos totales</small><strong>{{ total_equipos }}</strong><em>Ver flota →</em></span></a>
+    <a href="{% url 'flota:equipos' %}?estado=DISPONIBLE" class="mock-kpi"><span class="mock-icon icon-green">◉</span><span><small>Disponibles</small><strong>{{ equipos_disponibles }}</strong><em>{{ porcentaje_disponibles }}%</em></span></a>
+    <a href="{% url 'flota:equipos' %}?estado=EN_MANTENIMIENTO" class="mock-kpi"><span class="mock-icon icon-orange">⚒</span><span><small>En mantenimiento</small><strong>{% for item in estados_flotas %}{% if item.nombre == 'En mantenimiento' %}{{ item.cantidad }}{% endif %}{% endfor %}</strong><em>Ver estado</em></span></a>
+    <a href="{% url 'cuentas:mantenimientos_vencidos' %}" class="mock-kpi"><span class="mock-icon icon-red">!</span><span><small>Vencidos</small><strong>{{ servicios_vencidos }}</strong><em>{{ servicios_por_vencer }} próximos</em></span></a>
+    <a href="{% url 'mantencion:ordenes_trabajo' %}?estado=ABIERTAS" class="mock-kpi"><span class="mock-icon icon-blue">▤</span><span><small>Órdenes abiertas</small><strong>{{ ots_abiertas }}</strong><em>de {{ total_ot }} totales</em></span></a>
+</section>
+
+<section class="mock-top-grid">
+    <article class="mock-card fleet-card"><h2>Estado de la flota</h2><div class="fleet-chart"><div class="donut" style="--donut: conic-gradient({{ flota_donut }});"><strong>{{ total_equipos }}</strong><span>equipos</span></div><div class="chart-legend">{% for item in estados_flotas %}<div><i class="bar-{{ item.tono }}"></i><span>{{ item.nombre }}</span><b>{{ item.cantidad }}</b><small>{{ item.porcentaje }}%</small></div>{% endfor %}</div></div></article>
+    <article class="mock-card health-card"><h2>Salud de mantención</h2><div class="health-stack">{% for item in salud_mantencion %}<span class="bar-{{ item.tono }}" style="width: {{ item.porcentaje|floatformat:0 }}%"></span>{% endfor %}</div><div class="health-legend">{% for item in salud_mantencion %}<div><i class="bar-{{ item.tono }}"></i><span>{{ item.nombre }}</span><b>{{ item.cantidad }}</b><small>{{ item.porcentaje }}%</small></div>{% endfor %}</div></article>
+    <article class="mock-card urgent-card"><div class="urgent-heading"><h2>Tareas urgentes</h2><b>{{ servicios_vencidos|add:equipos_sin_devolver }}</b></div><a class="urgent-row urgent-danger" href="{% url 'cuentas:mantenimientos_vencidos' %}"><span>!</span>{{ servicios_vencidos }} mantenciones vencidas <i>›</i></a><a class="urgent-row" href="{% url 'cuentas:mantenimientos_por_vencer' %}"><span>◷</span>{{ servicios_por_vencer }} mantenciones por vencer <i>›</i></a><a class="urgent-row" href="{% url 'mantencion:ordenes_trabajo' %}?estado=ABIERTAS"><span>▤</span>{{ ots_abiertas }} órdenes abiertas <i>›</i></a><a class="urgent-row" href="{% url 'horometros:index' %}"><span>◌</span>{{ solicitudes_pendientes }} solicitudes de horómetros <i>›</i></a></article>
+</section>
+
+<section class="mock-bottom-grid">
+    <article class="mock-card tasks-card"><div class="card-title-line"><h2>Próximas tareas</h2><a href="{% url 'cuentas:mantenimientos_pendientes' %}">Ver todas →</a></div><div class="task-tabs" role="tablist">
+        <button type="button" class="active" role="tab" aria-selected="true" data-filtro-tarea="todas">Todas</button>
+        <button type="button" role="tab" aria-selected="false" data-filtro-tarea="vencidas">Vencidas ({{ servicios_vencidos }})</button>
+        <button type="button" role="tab" aria-selected="false" data-filtro-tarea="por-vencer">Por vencer ({{ servicios_por_vencer }})</button>
+        <button type="button" role="tab" aria-selected="false" data-filtro-tarea="ordenes">Órdenes ({{ ots_abiertas }})</button>
+    </div><div class="task-table">
+        <a href="{% url 'cuentas:mantenimientos_vencidos' %}" data-categoria="vencidas"><i class="task-symbol danger">!</i><span><strong>Mantención vencida</strong><small>Servicios cuyo intervalo ya fue cumplido.</small></span><b>{{ servicios_vencidos }}</b><em>Ver</em></a>
+        <a href="{% url 'cuentas:mantenimientos_por_vencer' %}" data-categoria="por-vencer"><i class="task-symbol warning">◷</i><span><strong>Mantención por vencer</strong><small>Programa servicios dentro del umbral.</small></span><b>{{ servicios_por_vencer }}</b><em>Ver</em></a>
+        <a href="{% url 'mantencion:ordenes_trabajo' %}?estado=ABIERTAS" data-categoria="ordenes"><i class="task-symbol blue">▤</i><span><strong>Órdenes abiertas</strong><small>Programadas o en curso.</small></span><b>{{ ots_abiertas }}</b><em>Ver</em></a>
+        <a href="{% url 'horometros:index' %}" data-categoria="horometros"><i class="task-symbol neutral">◌</i><span><strong>Pedir horómetros</strong><small>Solicitudes que siguen pendientes.</small></span><b>{{ solicitudes_pendientes }}</b><em>Ver</em></a>
+    </div></article>
+    <aside class="mock-side-column"><article class="mock-card compact-card"><div class="card-title-line"><h2>Equipos por estado</h2><a href="{% url 'flota:equipos' %}">Ver flota →</a></div>{% for item in estados_flotas %}<div class="mini-bar"><span><i class="bar-{{ item.tono }}"></i>{{ item.nombre }}</span><b>{{ item.cantidad }}</b><div><em class="bar-{{ item.tono }}" style="width: {{ item.porcentaje|floatformat:0 }}%"></em></div></div>{% endfor %}</article>
+    <article class="mock-card compact-card"><div class="card-title-line"><h2>Órdenes de trabajo</h2><a href="{% url 'mantencion:ordenes_trabajo' %}">Ver todas →</a></div>{% for item in ordenes_por_estado %}<div class="mini-bar"><span><i class="bar-{{ item.tono }}"></i>{{ item.nombre }}</span><b>{{ item.cantidad }}</b><div><em class="bar-{{ item.tono }}" style="width: {{ item.porcentaje|floatformat:0 }}%"></em></div></div>{% endfor %}</article></aside>
+</section>
+
+<section class="mapa-flota-seccion">
+    <article class="mock-card mapa-card">
+        <div class="card-title-line"><h2>Flota en vivo</h2><a href="{% url 'flota:equipos' %}">Ver toda la flota →</a></div>
+        <p class="mapa-subtitulo">Toca una máquina del mapa para abrir su ficha.</p>
+        <div id="mapa-flota" class="mapa-flota" data-endpoint="{% url 'flota:posiciones' %}" role="application" aria-label="Mapa de la flota en vivo"></div>
+        <p class="mapa-aviso" id="mapa-flota-aviso" aria-live="polite" hidden></p>
+        <div class="drawer-fondo" id="drawer-equipo-fondo" hidden></div>
+        <aside class="drawer-equipo" id="drawer-equipo" role="dialog" aria-modal="true" aria-labelledby="drawer-equipo-codigo" hidden>
+            <button type="button" class="drawer-cerrar" id="drawer-equipo-cerrar" aria-label="Cerrar ficha del equipo">×</button>
+            <p class="drawer-etiqueta">Equipo</p>
+            <h3 id="drawer-equipo-codigo"></h3>
+            <p class="drawer-detalle" id="drawer-equipo-detalle"></p>
+            <dl class="drawer-datos">
+                <div><dt>Estado</dt><dd><span class="drawer-estado" id="drawer-equipo-estado"></span></dd></div>
+                <div><dt>Patente</dt><dd id="drawer-equipo-patente"></dd></div>
+                <div><dt>Horómetro</dt><dd id="drawer-equipo-horometro"></dd></div>
+                <div><dt>Última señal</dt><dd id="drawer-equipo-senal"></dd></div>
+            </dl>
+            <a class="btn btn-primary drawer-enlace" id="drawer-equipo-enlace" href="#">Abrir ficha completa</a>
+        </aside>
+    </article>
+</section>
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.css">
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js"></script>
+<script src="{% static 'js/mapa-flota.js' %}"></script>
+<script src="{% static 'js/tareas-dashboard.js' %}"></script>
+{% endblock %}
